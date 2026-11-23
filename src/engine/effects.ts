@@ -37,6 +37,13 @@ export function dilate(src: AnyCanvas, r: number): AnyCanvas {
   return c;
 }
 
+// Silhouette with soft edges firmed up (fur, hair): a ≥ t → opaque.
+function hardened(src: AnyCanvas, t = 96): AnyCanvas {
+  const a = alphaPlane(src);
+  for (let i = 0; i < a.length; i++) a[i] = a[i] >= t ? 255 : (a[i] * 255) / t;
+  return canvasFromAlpha(a, src.width, src.height);
+}
+
 // Opaque where src is transparent (inside the surface rect).
 function inverse(src: AnyCanvas): AnyCanvas {
   const c = createCanvas(src.width, src.height);
@@ -94,7 +101,7 @@ export function applyEffects(s: Surface, fx: LayerEffects, scale: number): Surfa
   if (st && stWidth > 0 && stPos !== "inside") {
     const r = stPos === "center" ? stWidth / 2 : stWidth;
     ctx.globalAlpha = num(st.opacity, 1);
-    ctx.drawImage(tinted(dilate(src, r), st.color ?? "#ffffff"), 0, 0);
+    ctx.drawImage(tinted(dilate(hardened(src), r), st.color ?? "#ffffff"), 0, 0);
     ctx.globalAlpha = 1;
   }
 

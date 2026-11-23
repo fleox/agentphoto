@@ -11,6 +11,7 @@ import { OpsError } from "../ops/context";
 import { getDoc, patchDoc, type PatchOp } from "../ops/doc";
 import { FORMAT_EXT, IMAGE_FORMATS, planExport, type ExportRequest } from "../ops/export";
 import { allLayerIds, findLayer, referencedFiles } from "../ops/tree";
+import { layerBox } from "../ops/geometry";
 import { bool, mutationResult, num, optStr, str } from "./shared";
 import type { AiTool, EngineHost, EncodedImage, ToolContext } from "./types";
 
@@ -58,6 +59,24 @@ async function writeMask(ctx: ToolContext, doc: PhotoDoc, id: string, img: Encod
     if (!still) await removeGenerated(ctx.fs, prev);
   }
   return { mask: entry.path, size: `${img.width}×${img.height}`, ...(img.bbox !== undefined ? { subject: subjectBox(layer, img) } : {}), ...mutationResult(r, false) };
+}
+
+// Text / shape layers that a cover-crop export cuts.
+function coverCuts(doc: PhotoDoc, job: { source: { x: number; y: number; width: number; height: number } }): string[] {
+  const { x, y, width, height } = job.source;
+  if (x <= 0.5 && y <= 0.5 && width >= doc.canvas.width - 1 && height >= doc.canvas.height - 1) return [];
+  const out: string[] = [];
+  const visit = (layers: Layer[]) => {
+    for (const l of layers) {
+      if (l.visible === false) continue;
+      if (l.type === "group") visit(l.children ?? []);
+      if (l.type !== "text" && l.type !== "shape") continue;
+      const b = layerBox(l);
+      if (b && (b.x < x - 1 || b.y < y - 1 || b.x + b.width > x + width + 1 || b.y + b.height > y + height + 1)) out.push(l.id);
+    }
+  };
+  visit(doc.layers);
+  return out;
 }
 
 // Kept area of a mask in canvas px (layer box mapping; approximate when the layer is rotated).
@@ -175,6 +194,8 @@ export const IMAGE_TOOLS: AiTool[] = [
           note = `${job.format.toUpperCase()} encoding is not supported by this browser: written as ${img.mime}.`;
         }
         await ctx.fs.writeBytes(path, img.bytes);
+        const cut = coverCuts(doc, job);
+        if (cut.length) note = `${note ? `${note} ` : ""}fit "cover" crops the canvas to ${Math.round(job.source.width)}×${Math.round(job.source.height)} and cuts layer${cut.length > 1 ? "s" : ""} ${cut.join(", ")}: use fit "contain", or adapt the layout (doc_patch resizeCanvas / move layers) for this size.`;
         if (job.scale > 1.05) note = `${note ? `${note} ` : ""}Upscaled ×${Math.round(job.scale * 100) / 100} from the ${doc.canvas.width}×${doc.canvas.height} canvas: it may look soft.`;
         files.push({ path, format: img.mime === "image/jpeg" ? "jpeg" : (EXT[img.mime] ?? job.format), width: img.width, height: img.height, kb: Math.round(img.bytes.byteLength / 102.4) / 10, ...(note ? { note } : {}) });
       }
