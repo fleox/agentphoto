@@ -4,7 +4,7 @@
 // front door produces the same files.
 
 import { sizePreset, SIZE_PRESETS } from "../core/catalog";
-import { isValidColor } from "../core/color";
+import { isValidColor, parseColor } from "../core/color";
 import { didYouMean } from "../core/suggest";
 import type { ExportSettings, ImageFormat, PhotoDoc } from "../core/types";
 import { MAX_CANVAS } from "../core/validate";
@@ -49,6 +49,11 @@ export function planExport(doc: PhotoDoc, req: ExportRequest = {}): ExportJob {
   let outW = W;
   let outH = H;
   let fit = d.fit ?? "cover";
+  if (!["cover", "contain", "stretch"].includes(fit)) throw new OpsError("invalid", `Unknown fit "${String(fit)}".`, "fit: cover (crop), contain (pad) or stretch.");
+  for (const k of ["width", "height", "scale"] as const) {
+    const v = d[k];
+    if (v !== undefined && v !== null && !(typeof v === "number" && Number.isFinite(v) && v > 0)) throw new OpsError("invalid", `Export ${k} must be a positive number, got ${JSON.stringify(v)}.`, k === "scale" ? "e.g. scale: 2 (twice the canvas size) or 0.5." : `${k} in px, e.g. 1080.`);
+  }
   if (d.preset) {
     const p = sizePreset(d.preset);
     if (!p) throw new OpsError("invalid", `Unknown size preset "${d.preset}".`, `${didYouMean(d.preset, SIZE_PRESETS.map((s) => s.id))}Presets: ${SIZE_PRESETS.map((s) => s.id).join(", ")}.`);
@@ -87,7 +92,8 @@ export function planExport(doc: PhotoDoc, req: ExportRequest = {}): ExportJob {
   const scale = dest.width / source.width;
   let background: string | null = d.background ?? null;
   if (background !== null && !isValidColor(background)) throw new OpsError("invalid", `Export background ${JSON.stringify(background)} is not a colour.`);
-  if (format === "jpeg" && !background) background = "#ffffff";
+  // JPEG has no alpha: a missing or fully transparent background would come out black.
+  if (format === "jpeg" && (!background || parseColor(background)?.a === 0)) background = "#ffffff";
   const name = (d.name ?? doc.id ?? "photo").replace(/[^\w.-]+/g, "-");
   const suffix = d.preset ? `-${d.preset}` : d.width || d.height || d.scale ? `-${outW}x${outH}` : "";
   const file = d.out ?? `dist/${name}${suffix}.${FORMAT_EXT[format]}`;

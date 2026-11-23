@@ -6,7 +6,7 @@ import { isValidId, uniqueId } from "../core/ids";
 import { clone, deepEqual, getAt, mergePatch, PathError, removeAt, setAt } from "../core/jsonPath";
 import { isLibraryRef } from "../core/library";
 import { didYouMean } from "../core/suggest";
-import { hasBox, type Filter, type Issue, type Layer, type Mask, type PhotoDoc } from "../core/types";
+import { hasBox, isShapeMask, type Filter, type Issue, type Layer, type Mask, type PhotoDoc } from "../core/types";
 import { normalizeDoc, validateDoc } from "../core/validate";
 import { hasErrors, OpsError, readJson } from "./context";
 import { ANCHORS, cropDoc, flipDoc, resizeCanvasDoc, rotateDoc, scaleDoc, type Anchor, type SizeMap } from "./geometry";
@@ -81,7 +81,7 @@ export function summarizeDoc(doc: PhotoDoc): DocSummary {
     id: doc.id,
     ...(doc.title ? { title: doc.title } : {}),
     canvas: { width: doc.canvas?.width, height: doc.canvas?.height, background: bg === undefined || bg === null ? "transparent" : typeof bg === "string" ? bg : `${bg.type} gradient` },
-    layers: [...(doc.layers ?? [])].reverse().map((l, k, arr) => summarizeLayer(l, flatOf(l, null, arr.length - 1 - k))),
+    layers: [...(Array.isArray(doc.layers) ? doc.layers : [])].reverse().map((l, k, arr) => summarizeLayer(l, flatOf(l, null, arr.length - 1 - k))),
     counts: { layers: Object.values(byType).reduce((a, b) => a + b, 0), byType, hidden, masks, filters },
     sources: [...sources],
     ...(doc.export ? { export: doc.export } : {}),
@@ -101,13 +101,16 @@ export function diffDocs(before: PhotoDoc | null, after: PhotoDoc): DocPlan {
   const map = (d: PhotoDoc | null) => {
     const m = new Map<string, { layer: Layer; where: string }>();
     if (!d) return m;
-    const visit = (layers: Layer[], parent: string) =>
-      layers.forEach((l, i) => {
+    // Tolerates invalid documents (applyDoc diffs before validation refuses them).
+    const visit = (layers: unknown, parent: string) => {
+      if (!Array.isArray(layers)) return;
+      layers.forEach((l: Layer, i) => {
         if (!l || typeof l !== "object") return;
         m.set(l.id, { layer: l, where: `${parent}[${i}]` });
-        if (l.type === "group") visit(l.children ?? [], l.id);
+        if (l.type === "group") visit(l.children, l.id);
       });
-    visit(d.layers ?? [], "root");
+    };
+    visit(d.layers, "root");
     return m;
   };
   const a = map(before);
@@ -115,7 +118,10 @@ export function diffDocs(before: PhotoDoc | null, after: PhotoDoc): DocPlan {
   const added = [...b.keys()].filter((id) => !a.has(id));
   const removed = [...a.keys()].filter((id) => !b.has(id));
   const changed: { id: string; fields: string[] }[] = [];
-  const moved: { id: string; from: string; to: string }[] = [];
+  const movedIds = new Set<string>();
+  const parentOf = (where: string) => where.slice(0, where.lastIndexOf("["));
+  const indexOf = (where: string) => Number(where.slice(where.lastIndexOf("[") + 1, -1));
+  const sameParent = new Map<string, { id: string; from: number; to: number }[]>();
   for (const [id, { layer, where }] of b) {
     const old = a.get(id);
     if (!old) continue;
@@ -123,10 +129,24 @@ export function diffDocs(before: PhotoDoc | null, after: PhotoDoc): DocPlan {
     keys.delete("children");
     const fields = [...keys].filter((k) => !deepEqual((old.layer as unknown as Record<string, unknown>)[k], (layer as unknown as Record<string, unknown>)[k]));
     if (fields.length) changed.push({ id, fields });
-    if (old.where !== where) moved.push({ id, from: old.where, to: where });
+    if (parentOf(old.where) !== parentOf(where)) movedIds.add(id);
+    else {
+      const list = sameParent.get(parentOf(where)) ?? [];
+      list.push({ id, from: indexOf(old.where), to: indexOf(where) });
+      sameParent.set(parentOf(where), list);
+    }
   }
-  // Pure index shifts caused by adds / removes are not moves.
-  const realMoves = moved.filter((m) => m.from.split("[")[0] !== m.to.split("[")[0] || (!added.length && !removed.length));
+  // Inside one parent, index shifts caused by adds / removes / other moves are
+  // not moves: the layers that keep their relative order (the longest run in
+  // order) stay, the others moved.
+  for (const list of sameParent.values()) {
+    list.sort((x, y) => x.from - y.from);
+    const keep = longestIncreasing(list.map((x) => x.to));
+    list.forEach((x, k) => {
+      if (!keep.has(k)) movedIds.add(x.id);
+    });
+  }
+  const realMoves = [...b.keys()].filter((id) => movedIds.has(id)).map((id) => ({ id, from: a.get(id)!.where, to: b.get(id)!.where }));
   const sections = (["canvas", "title", "description", "export", "id", "version"] as const).filter((k) => !deepEqual(before?.[k], after[k]));
   const parts: string[] = [];
   if (added.length) parts.push(`added ${added.join(", ")}`);
@@ -136,6 +156,27 @@ export function diffDocs(before: PhotoDoc | null, after: PhotoDoc): DocPlan {
   if (sections.length) parts.push(`updated ${sections.join(", ")}`);
   const empty = !parts.length;
   return { empty, layers: { added, removed, changed, moved: realMoves }, sections, summary: empty ? "No change." : `${parts.join("; ")}.` };
+}
+
+// Indexes (into `seq`) of one longest strictly increasing subsequence.
+function longestIncreasing(seq: number[]): Set<number> {
+  const len: number[] = [];
+  const prev: number[] = [];
+  let best = -1;
+  for (let i = 0; i < seq.length; i++) {
+    len[i] = 1;
+    prev[i] = -1;
+    for (let j = 0; j < i; j++) {
+      if (seq[j] < seq[i] && len[j] + 1 > len[i]) {
+        len[i] = len[j] + 1;
+        prev[i] = j;
+      }
+    }
+    if (best < 0 || len[i] > len[best]) best = i;
+  }
+  const out = new Set<number>();
+  for (let i = best; i >= 0; i = prev[i]) out.add(i);
+  return out;
 }
 
 // ─── apply (full replace) ───────────────────────────────────────────────
@@ -316,9 +357,19 @@ export function applyPatchOps(doc: PhotoDoc, ops: PatchOp[], sizes: SizeMap = {}
           const taken = new Set(allLayerIds(d));
           if (op.newId !== undefined && (!isValidId(op.newId) || taken.has(op.newId))) throw opError(i, "conflict", `newId ${JSON.stringify(op.newId)} is invalid or taken.`);
           const copy = renameTree(loc.layer, taken, op.newId);
-          if (op.offset && hasBox(copy)) {
-            copy.x = (copy.x ?? 0) + op.offset[0];
-            copy.y = (copy.y ?? 0) + op.offset[1];
+          if (op.offset) {
+            const [dx, dy] = op.offset;
+            if (!Number.isFinite(dx) || !Number.isFinite(dy)) throw opError(i, "invalid", "offset must be [dx, dy] in px.");
+            // A group copy moves with its children (and canvas-space shape masks).
+            walkLayers([copy], (l) => {
+              if (hasBox(l)) {
+                l.x = (l.x ?? 0) + dx;
+                l.y = (l.y ?? 0) + dy;
+              } else if (l.mask && isShapeMask(l.mask)) {
+                l.mask.x += dx;
+                l.mask.y += dy;
+              }
+            });
           }
           if (copy.name) copy.name = `${copy.name} copy`;
           loc.container.splice(loc.index + 1, 0, copy);
@@ -327,7 +378,8 @@ export function applyPatchOps(doc: PhotoDoc, ops: PatchOp[], sizes: SizeMap = {}
         case "groupLayers": {
           if (!Array.isArray(op.ids) || !op.ids.length) throw opError(i, "invalid", '"ids" (layers to group) is required.');
           if (!isValidId(op.id) || allLayerIds(d).includes(op.id)) throw opError(i, "conflict", `Group id ${JSON.stringify(op.id)} is invalid or taken.`);
-          const locs = op.ids.map((id) => need(d, id, i));
+          // Duplicate ids would splice the same index twice (losing a neighbour).
+          const locs = [...new Set(op.ids)].map((id) => need(d, id, i));
           const container = locs[0].container;
           if (locs.some((l) => l.container !== container)) throw opError(i, "invalid", "Grouped layers must be siblings (same parent).");
           const sorted = [...locs].sort((a, b) => a.index - b.index);

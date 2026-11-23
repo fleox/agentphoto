@@ -78,6 +78,21 @@ export async function createProject(fs: ProjectFs, opts: CreateProjectOptions): 
   let doc: PhotoDoc;
   let templateSlot: string | undefined;
 
+  // Everything that can fail is checked before the first write.
+  let templateDoc: PhotoDoc | null = null;
+  if (opts.templateFiles) {
+    const tf = opts.templateFiles;
+    if (!tf[DOC_FILE]) throw new OpsError("invalid", `Template "${opts.template ?? "?"}" has no photo.json.`, "A template folder holds photo.json, template.json and optional assets/.");
+    try {
+      templateDoc = normalizeDoc(JSON.parse(asText(tf[DOC_FILE])) as PhotoDoc);
+    } catch (e) {
+      throw new OpsError("invalid", `Template photo.json is not valid JSON: ${(e as Error).message}`);
+    }
+    const tIssues = validateDoc(templateDoc);
+    if (hasErrors(tIssues)) throw validationError(`Template "${opts.template ?? "?"}" is invalid.`, tIssues);
+  }
+  if (opts.image && !imageInfo(opts.image.bytes)) throw new OpsError("invalid", `${opts.image.name} is not a supported image (PNG, JPEG, WebP, GIF, BMP, AVIF, SVG).`);
+
   // The photo first: its size drives the canvas.
   let photo: { path: string; width: number; height: number } | null = null;
   if (opts.image) {
@@ -91,18 +106,13 @@ export async function createProject(fs: ProjectFs, opts: CreateProjectOptions): 
 
   if (opts.templateFiles) {
     const tf = opts.templateFiles;
-    if (!tf[DOC_FILE]) throw new OpsError("invalid", `Template "${opts.template ?? "?"}" has no photo.json.`, "A template folder holds photo.json, template.json and optional assets/.");
     for (const [path, content] of Object.entries(tf)) {
       if (path === DOC_FILE || path === MANIFEST_FILE || path === "template.json" || path === "preview.png" || path === "preview.jpg") continue;
       if (typeof content === "string") await fs.writeText(path, content);
       else await fs.writeBytes(path, content);
       files.push(path);
     }
-    try {
-      doc = normalizeDoc(JSON.parse(asText(tf[DOC_FILE])) as PhotoDoc);
-    } catch (e) {
-      throw new OpsError("invalid", `Template photo.json is not valid JSON: ${(e as Error).message}`);
-    }
+    doc = templateDoc!;
     try {
       templateSlot = tf["template.json"] ? (JSON.parse(asText(tf["template.json"])) as { slot?: string }).slot : undefined;
     } catch {

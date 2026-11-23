@@ -75,7 +75,11 @@ export async function checkProject(fs: ProjectFs, opts: { library?: LibraryIndex
       const nat = sizes[l.src];
       const src = l.crop ?? nat;
       if (src && nat) {
-        const k = Math.max(box.width / src.width, box.height / src.height) * (l.fit === "cover" ? Math.max(1, (box.width / box.height) / (src.width / src.height), (src.width / src.height) / (box.width / box.height)) : 1);
+        // Display scale of the source: fill stretches each axis (the larger one counts), cover scales
+        // uniformly by the larger ratio (the overflow is cropped), contain by the smaller one.
+        const sx = box.width / src.width;
+        const sy = box.height / src.height;
+        const k = l.fit === "contain" ? Math.min(sx, sy) : Math.max(sx, sy);
         if (k > 1.6) add("warning", "upscaled", p, `Image "${l.id}" is shown at ${Math.round(k * 100)} % of its resolution (${src.width}×${src.height} stretched to ${Math.round(box.width)}×${Math.round(box.height)}): it will look soft.`, "Use a larger source, or a smaller layer / canvas.");
       }
     }

@@ -5,8 +5,8 @@
 // text layers without a width use an estimate of their box.
 
 import { filterDef, EFFECTS } from "../core/catalog";
-import type { Filter, Layer, Mask, PhotoDoc, ShapeMask, TextLayer } from "../core/types";
-import { hasBox, isShapeMask } from "../core/types";
+import type { Filter, Layer, Mask, Paint, PhotoDoc, ShapeMask, TextLayer } from "../core/types";
+import { hasBox, isGradientMask, isShapeMask } from "../core/types";
 import { OpsError } from "./context";
 
 export type SizeMap = Record<string, { width: number; height: number }>;
@@ -174,6 +174,34 @@ export function scaleDoc(doc: PhotoDoc, sx: number, sy: number, sizes: SizeMap =
 
 // ─── rotate / flip ──────────────────────────────────────────────────────
 
+// Degrees into (-180, 180].
+const normAngle = (deg: number) => {
+  const a = (((deg + 180) % 360) + 360) % 360 - 180;
+  return a === -180 ? 180 : a;
+};
+
+// Gradients painted over the whole canvas (canvas background, fill layers,
+// canvas-space gradient masks) turn / mirror with the picture. Box layers'
+// paints are relative to their box, which already turns / flips with them.
+function transformPaint(p: Paint | null | undefined, fn: { angle: (deg: number) => number; point: (x: number, y: number) => [number, number] }): void {
+  if (!p || typeof p !== "object") return;
+  if (p.type === "linear") p.angle = r2(normAngle(fn.angle(p.angle ?? 90)));
+  else if (p.type === "radial") {
+    const [cx, cy] = fn.point(p.cx ?? 0.5, p.cy ?? 0.5);
+    p.cx = r2(cx);
+    p.cy = r2(cy);
+  }
+}
+
+function transformCanvasPaints(doc: PhotoDoc, fn: Parameters<typeof transformPaint>[1]): void {
+  transformPaint(doc.canvas.background, fn);
+  eachLayer(doc.layers, (l) => {
+    if (hasBox(l)) return;
+    if (l.type === "fill") transformPaint(l.fill, fn);
+    if (l.mask && isGradientMask(l.mask)) transformPaint(l.mask.gradient, fn);
+  });
+}
+
 export function rotateDoc(doc: PhotoDoc, angle: number, sizes: SizeMap = {}): PhotoDoc {
   const a = (((Math.round(angle / 90) * 90) % 360) + 360) % 360;
   if (angle % 90 !== 0) throw new OpsError("invalid", `Canvas rotation must be a multiple of 90°, got ${angle}.`, "To straighten a photo by a few degrees, set the image layer's rotation instead (and crop).");
@@ -191,7 +219,7 @@ export function rotateDoc(doc: PhotoDoc, angle: number, sizes: SizeMap = {}): Ph
       const bl = l as Layer & { x?: number; y?: number; rotation?: number };
       bl.x = r2(cx - box.width / 2);
       bl.y = r2(cy - box.height / 2);
-      bl.rotation = (((bl.rotation ?? 0) + a + 180) % 360) - 180;
+      bl.rotation = normAngle((bl.rotation ?? 0) + a);
       if (bl.rotation === 0) delete bl.rotation;
     } else if (l.mask && isShapeMask(l.mask)) {
       const m = l.mask;
@@ -200,6 +228,8 @@ export function rotateDoc(doc: PhotoDoc, angle: number, sizes: SizeMap = {}): Ph
       Object.assign(m, { x: r2(cx - w / 2), y: r2(cy - h / 2), width: w, height: h });
     }
   });
+  // Fractions of the canvas box: (fx, fy) → rotated box.
+  transformCanvasPaints(out, { angle: (deg) => deg + a, point: (fx, fy) => (a === 90 ? [1 - fy, fx] : a === 180 ? [1 - fx, 1 - fy] : [fy, 1 - fx]) });
   if (a !== 180) out.canvas = { ...out.canvas, width: H, height: W };
   return out;
 }
@@ -230,5 +260,6 @@ export function flipDoc(doc: PhotoDoc, axis: "horizontal" | "vertical", sizes: S
       else m.y = r2(H - m.y - m.height);
     }
   });
+  transformCanvasPaints(out, axis === "horizontal" ? { angle: (deg) => 180 - deg, point: (fx, fy) => [1 - fx, fy] } : { angle: (deg) => -deg, point: (fx, fy) => [fx, 1 - fy] });
   return out;
 }
