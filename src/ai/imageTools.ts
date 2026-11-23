@@ -51,7 +51,20 @@ async function writeMask(ctx: ToolContext, doc: PhotoDoc, id: string, img: Encod
     const still = referencedFiles(r.doc).some((f) => f.path === prev);
     if (!still) await removeGenerated(ctx.fs, prev);
   }
-  return { mask: entry.path, size: `${img.width}×${img.height}`, ...mutationResult(r, false) };
+  return { mask: entry.path, size: `${img.width}×${img.height}`, ...(img.bbox !== undefined ? { subject: subjectBox(layer, img) } : {}), ...mutationResult(r, false) };
+}
+
+// Kept area of a mask in canvas px (layer box mapping; approximate when the layer is rotated).
+function subjectBox(layer: Layer, img: EncodedImage): { x: number; y: number; width: number; height: number } | null {
+  const b = img.bbox;
+  if (!b) return null;
+  const l = layer as Layer & { x?: number; y?: number; width?: number; height?: number; flipX?: boolean; flipY?: boolean };
+  const kx = (l.width ?? img.width) / img.width;
+  const ky = (l.height ?? img.height) / img.height;
+  const bx = l.flipX ? img.width - b.x - b.width : b.x;
+  const by = l.flipY ? img.height - b.y - b.height : b.y;
+  const r = (v: number) => Math.round(v);
+  return { x: r((l.x ?? 0) + bx * kx), y: r((l.y ?? 0) + by * ky), width: r(b.width * kx), height: r(b.height * ky) };
 }
 
 async function removeGenerated(fs: ProjectFs, path: string) {
@@ -206,7 +219,7 @@ export const IMAGE_TOOLS: AiTool[] = [
       }
       if (bool(input, "shadow")) extra.push({ op: "updateLayer", id, set: { effects: { dropShadow: { color: "#000000", opacity: 0.35, angle: 90, distance: 18, blur: 30 } } } });
       const r = await writeMask(ctx, doc, id, img, { label: "cutout", extraOps: extra, source: `remove_background:${model}` });
-      return { ...r, model, hint: "Call render_preview { zoom } on an edge (hair, fingers) to check; refine with mask_generate (points) or threshold / feather." };
+      return { ...r, model, hint: "subject = the kept area in canvas px (null: nothing found). Center / scale the layer from it if needed, then render_preview (zoom on an edge: hair, fingers) to check; refine with mask_generate (points) or threshold / feather." };
     },
   },
   {

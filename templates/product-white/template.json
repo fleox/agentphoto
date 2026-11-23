@@ -1,0 +1,1 @@
+{ "id": "product-white", "title": "Product on white", "description": "E-commerce square: product cut out (run remove_background on the photo layer), centred on a soft white backdrop with a contact shadow.", "category": "product", "tags": ["ecommerce", "packshot", "cutout", "white"], "width": 2000, "height": 2000, "slot": "photo" }

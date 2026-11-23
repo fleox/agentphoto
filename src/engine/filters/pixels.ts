@@ -54,7 +54,7 @@ function boxBlurPlane(src: Float32Array, w: number, h: number, r: number, tmp: F
     const row = y * w;
     const first = src[row];
     const last = src[row + w - 1];
-    let acc = (r + 1) * first;
+    let acc = r * first;
     for (let x = 0; x < r; x++) acc += src[row + Math.min(x, w - 1)];
     for (let x = 0; x < w; x++) {
       const add = src[row + Math.min(x + r, w - 1)] ?? last;
@@ -67,7 +67,7 @@ function boxBlurPlane(src: Float32Array, w: number, h: number, r: number, tmp: F
   // vertical: tmp → src
   for (let x = 0; x < w; x++) {
     const first = tmp[x];
-    let acc = (r + 1) * first;
+    let acc = r * first;
     for (let y = 0; y < r; y++) acc += tmp[Math.min(y, h - 1) * w + x];
     for (let y = 0; y < h; y++) {
       acc += tmp[Math.min(y + r, h - 1) * w + x];

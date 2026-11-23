@@ -5,7 +5,7 @@ import type { ProjectFs } from "../core/fs";
 import { slugify } from "../core/ids";
 import { imageInfo } from "../core/imageInfo";
 import { didYouMean } from "../core/suggest";
-import type { AssetManifest, ImageLayer, Issue, Paint, PhotoDoc, ProjectManifest } from "../core/types";
+import { isImageMask, type AssetManifest, type ImageLayer, type Issue, type Paint, type PhotoDoc, type ProjectManifest } from "../core/types";
 import { defaultDoc, MAX_CANVAS, normalizeDoc, validateDoc } from "../core/validate";
 import { AGENTPHOTO_VERSION, hasErrors, nowIso, OpsError, readJson, readJsonOr, validationError, writeJson } from "./context";
 import { findLayer } from "./tree";
@@ -114,7 +114,12 @@ export async function createProject(fs: ProjectFs, opts: CreateProjectOptions): 
     if (opts.background !== undefined) doc.canvas.background = opts.background;
     if (photo) {
       const slot = templateSlot ? findLayer(doc.layers, templateSlot) : null;
-      if (slot && slot.layer.type === "image") slot.layer.src = photo.path;
+      if (slot && slot.layer.type === "image") {
+        slot.layer.src = photo.path;
+        // The template's cut-out mask belongs to its sample image.
+        if (slot.layer.mask && isImageMask(slot.layer.mask)) delete slot.layer.mask;
+        delete slot.layer.crop;
+      }
       else doc.layers.unshift(photoLayer(photo, doc.canvas));
     }
   } else {

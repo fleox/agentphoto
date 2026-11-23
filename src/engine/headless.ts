@@ -21,9 +21,10 @@ export interface EncodedB64 {
   mime: string;
   width: number;
   height: number;
+  bbox?: Encoded["bbox"];
 }
 
-const b64 = (e: Encoded): EncodedB64 => ({ base64: bytesToBase64(e.bytes), mime: e.mime, width: e.width, height: e.height });
+const b64 = (e: Encoded): EncodedB64 => ({ base64: bytesToBase64(e.bytes), mime: e.mime, width: e.width, height: e.height, ...(e.bbox !== undefined ? { bbox: e.bbox } : {}) });
 
 let engine: Engine | null = null;
 const errors: { layer: string; message: string }[] = [];
@@ -64,6 +65,12 @@ const api = {
   },
   async colorRangeMask(doc: PhotoDoc, id: string, opts: { color: string; tolerance?: number; feather?: number }) {
     return b64(await need().colorRangeMask(doc, id, opts));
+  },
+  // Project files that changed on disk (a regenerated mask, a Studio edit):
+  // the next render reloads them instead of using the cached decode.
+  invalidate(paths: string[]) {
+    for (const p of paths) need().loader.invalidate(p);
+    return paths.length;
   },
   // Measured boxes (document px) of every layer with a box — text uses real font metrics.
   async layerBoxes(doc: PhotoDoc) {

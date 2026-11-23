@@ -38,6 +38,8 @@ export interface Encoded {
   mime: string;
   width: number;
   height: number;
+  // Masks: bounding box of the kept pixels (alpha ≥ 50 %), mask px.
+  bbox?: { x: number; y: number; width: number; height: number } | null;
 }
 
 export type MaskTarget = { kind: "layer"; id: string } | { kind: "canvas" };
@@ -162,13 +164,32 @@ function refineAlpha(a: Uint8ClampedArray, w: number, h: number, opts: { feather
 }
 
 // Mask PNG: grey = alpha, fully opaque (luminance masks).
+export function alphaBBox(alpha: Uint8ClampedArray, w: number, h: number): Encoded["bbox"] {
+  let x0 = w;
+  let y0 = h;
+  let x1 = -1;
+  let y1 = -1;
+  for (let y = 0; y < h; y++) {
+    const row = y * w;
+    for (let x = 0; x < w; x++) {
+      if (alpha[row + x] < 128) continue;
+      if (x < x0) x0 = x;
+      if (x > x1) x1 = x;
+      if (y < y0) y0 = y;
+      y1 = y;
+    }
+  }
+  return x1 < 0 ? null : { x: x0, y: y0, width: x1 - x0 + 1, height: y1 - y0 + 1 };
+}
+
 export async function encodeMask(alpha: Uint8ClampedArray, w: number, h: number): Promise<Encoded> {
+  const bbox = alphaBBox(alpha, w, h);
   const c = createCanvas(w, h);
   const ctx = ctx2d(c);
   ctx.fillStyle = "#000";
   ctx.fillRect(0, 0, w, h);
   ctx.drawImage(canvasFromAlpha(alpha, w, h), 0, 0);
-  return encode(c, "image/png");
+  return { ...(await encode(c, "image/png")), bbox };
 }
 
 export async function encode(c: AnyCanvas, mime: string, quality = 100): Promise<Encoded> {

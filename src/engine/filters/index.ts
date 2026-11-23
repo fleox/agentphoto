@@ -492,7 +492,9 @@ export function runFilters(p: Pixels, filters: Filter[] | undefined, env: Filter
     if (!f || f.enabled === false) continue;
     const impl = FILTER_IMPLS[f.type];
     if (!impl) continue;
-    const amount = typeof f.amount === "number" ? clamp01(f.amount) : 1;
+    // Filters with their own "amount" param (sharpen, clarity, noise, vignette) use it as strength, not as the mix.
+    const ownAmount = !!filterDef(f.type)?.params.some((p) => p.name === "amount");
+    const amount = !ownAmount && typeof f.amount === "number" ? clamp01(f.amount) : 1;
     if (amount <= 0) continue;
     const params = withDefaults(f);
     if (amount >= 1) {

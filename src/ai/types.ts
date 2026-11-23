@@ -29,6 +29,8 @@ export interface EncodedImage {
   mime: string;
   width: number;
   height: number;
+  // Masks: bounding box of the kept pixels, in mask px.
+  bbox?: { x: number; y: number; width: number; height: number } | null;
   // Layers that failed to render (missing source…).
   errors?: { layer: string; message: string }[];
 }
