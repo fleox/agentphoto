@@ -159,7 +159,9 @@ A visual editor for when you want to see and touch the picture yourself, on the 
 npx -y @fleox/agentphoto@0.1.0 studio --project trip
 ```
 
-Canvas with move, crop, text, shape and eyedropper tools, layers panel, inspector (properties, filters with a curve editor, looks, layer effects, masks), AI cut-out and masks in the page, export dialog, templates gallery, undo / redo, in English or French. An optional assistant panel calls the Claude API from your browser with your own key, over the same tools. See [docs/studio.md](https://github.com/fleox/agentphoto/blob/main/docs/studio.md).
+![AgentPhoto Studio](https://raw.githubusercontent.com/fleox/agentphoto/main/docs/images/studio-editor.jpg)
+
+Canvas with move / transform, crop, brush, eraser, clone stamp, marquee, lasso, magic wand, quick AI select (Segment Anything), text, shape and eyedropper tools, layers panel, inspector (properties, filters with a curve editor, looks, layer effects, masks), AI cut-out and masks in the page, export dialog, templates gallery, undo / redo, in English or French. An optional assistant panel calls the Claude API from your browser with your own key, over the same tools. See [docs/studio.md](https://github.com/fleox/agentphoto/blob/main/docs/studio.md).
 
 ## The `agentphoto` CLI
 
