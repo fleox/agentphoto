@@ -76,6 +76,8 @@ export interface Backend {
   fileUrl(path: string): Promise<string>;
   readFile(path: string): Promise<Uint8Array>;
   writeFile(path: string, bytes: Uint8Array): Promise<void>;
+  // Project files under a prefix (project-relative paths).
+  listFiles(prefix: string): Promise<string[]>;
   // Imports an image into assets/images/ and returns its project path.
   addImage(name: string, bytes: Uint8Array): Promise<string>;
   // Project files changed (paths relative to the project).

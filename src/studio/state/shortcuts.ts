@@ -11,6 +11,9 @@ import { toolById, toolByShortcut } from "../tools/registry";
 import { zoomAt } from "../tools/view";
 import { useEditor, type EditorApi } from "./context";
 import { toolCtx } from "./toolCtx";
+import { deleteRegion, invertSelection, selectAll } from "../actions/region";
+
+const PIXEL_TOOLS = new Set(["marquee", "lasso", "wand", "quick", "brush", "eraser", "clone"]);
 
 export const isTyping = (e: KeyboardEvent) => {
   const el = e.target as HTMLElement | null;
@@ -136,7 +139,12 @@ export function useShortcuts(): void {
         } else if (key === "a") {
           e.preventDefault();
           const doc = store.doc;
-          if (doc) store.select(doc.layers.map((l) => l.id).reverse());
+          // Selection / painting tools: all pixels; otherwise all layers.
+          if (PIXEL_TOOLS.has(ui.get().tool)) selectAll(api);
+          else if (doc) store.select(doc.layers.map((l) => l.id).reverse());
+        } else if (key === "i" && e.shiftKey) {
+          e.preventDefault();
+          invertSelection(api);
         }
         return;
       }
@@ -154,13 +162,15 @@ export function useShortcuts(): void {
       switch (e.key) {
         case "Escape":
           if (ui.get().textEdit) ui.set({ textEdit: null });
-          else if (ui.get().marquee) ui.set({ marquee: null });
+          else if (ui.get().region) ui.set({ region: null });
           else store.select(null);
           break;
         case "Delete":
         case "Backspace":
           e.preventDefault();
-          deleteSelection(api);
+          // With a pixel selection: hide those pixels (mask); else delete the layer.
+          if (ui.get().region && store.primary) void deleteRegion(api);
+          else deleteSelection(api);
           break;
         case "Tab":
           e.preventDefault();
@@ -170,9 +180,11 @@ export function useShortcuts(): void {
           ui.set({ dialog: "shortcuts" });
           break;
         case "[":
-        case "]":
-          // Reserved: brush size (phase 2 painting tools).
+        case "]": {
+          const k = e.key === "]" ? 1.15 : 1 / 1.15;
+          ui.set((s) => ({ brush: { ...s.brush, size: Math.max(1, Math.min(2000, Math.round(s.brush.size * k + (e.key === "]" ? 1 : -1)))) } }));
           break;
+        }
         default: {
           if (e.altKey || e.shiftKey) return;
           const tool = toolByShortcut(e.key);

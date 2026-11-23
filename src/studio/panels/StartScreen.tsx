@@ -9,6 +9,7 @@ import type { LibraryAsset } from "../../core/library";
 import type { TemplateInfo } from "../../ops/templates";
 import type { Backend, CreateOptions, ProjectRef } from "../backend/types";
 import { useI18n } from "../i18n";
+import { Dialog } from "../components/ui/Dialog";
 import { sizeTitle } from "../lib/labels";
 import { Logo } from "./TopBar";
 import { readFiles } from "./Viewport";
@@ -26,6 +27,7 @@ export function StartScreen({ backend, onOpened }: { backend: Backend; onOpened(
   const [busy, setBusy] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [drag, setDrag] = useState(false);
+  const [pick, setPick] = useState<TemplateInfo | null>(null);
   const input = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
@@ -165,6 +167,34 @@ export function StartScreen({ backend, onOpened }: { backend: Backend; onOpened(
               </section>
             )}
 
+            {templates.length > 0 && (
+              <section>
+                <div className="mb-3 flex items-baseline justify-between">
+                  <h2 className="text-base font-semibold">{t("start.templates")}</h2>
+                  <span className="text-xs text-fg-faint">{t("start.templatesHint")}</span>
+                </div>
+                <div className="grid grid-cols-3 gap-3 xl:grid-cols-4">
+                  {templates.map((tp) => (
+                    <button key={tp.id} type="button" data-template={tp.id} disabled={!canCreate || !!busy} onClick={() => setPick(tp)} className="group text-left disabled:opacity-60" title={tp.description}>
+                      <div className="relative aspect-[4/3] overflow-hidden rounded-lg bg-ink-2 ring-1 ring-white/5 transition group-hover:ring-accent/60">
+                        <TemplatePreview src={backend.templatePreview(tp.id)} />
+                        {busy === tp.id && (
+                          <div className="absolute inset-0 flex items-center justify-center bg-black/40">
+                            <Loader2 size={18} className="animate-spin" />
+                          </div>
+                        )}
+                        <span className="absolute bottom-1.5 left-1.5 rounded bg-black/60 px-1.5 py-0.5 text-2xs font-medium text-white/90 backdrop-blur">
+                          {tp.width}×{tp.height}
+                        </span>
+                      </div>
+                      <div className="mt-1.5 truncate text-xs font-medium">{tp.title}</div>
+                      <div className="truncate text-2xs capitalize text-fg-faint">{tp.category}</div>
+                    </button>
+                  ))}
+                </div>
+              </section>
+            )}
+
             <section>
               <div className="mb-3 flex items-baseline justify-between">
                 <h2 className="text-base font-semibold">{t("start.blank")}</h2>
@@ -185,30 +215,6 @@ export function StartScreen({ backend, onOpened }: { backend: Backend; onOpened(
               </div>
             </section>
 
-            {templates.length > 0 && (
-              <section>
-                <h2 className="mb-3 text-base font-semibold">{t("start.templates")}</h2>
-                <div className="grid grid-cols-2 gap-4 lg:grid-cols-3">
-                  {templates.map((tp) => (
-                    <button key={tp.id} type="button" disabled={!canCreate || !!busy} onClick={() => void create(tp.id, { title: tp.title, template: tp.id })} className="group rounded-lg p-2 text-left transition-colors hover:bg-ink-2 disabled:opacity-60">
-                      <div className="relative aspect-[16/10] overflow-hidden rounded-md bg-ink-2">
-                        <TemplatePreview src={backend.templatePreview(tp.id)} />
-                        {busy === tp.id && (
-                          <div className="absolute inset-0 flex items-center justify-center bg-black/40">
-                            <Loader2 size={18} className="animate-spin" />
-                          </div>
-                        )}
-                        <span className="absolute bottom-1.5 left-1.5 rounded bg-black/55 px-1.5 py-0.5 text-2xs font-medium text-white/90 backdrop-blur">
-                          {tp.width}×{tp.height}
-                        </span>
-                      </div>
-                      <div className="mt-2 text-sm font-medium">{tp.title}</div>
-                      <div className="line-clamp-2 text-xs text-fg-muted">{tp.description}</div>
-                    </button>
-                  ))}
-                </div>
-              </section>
-            )}
           </div>
 
           <aside>
@@ -263,7 +269,71 @@ export function StartScreen({ backend, onOpened }: { backend: Backend; onOpened(
           </aside>
         </div>
       </div>
+      {pick && (
+        <TemplateDialog
+          tp={pick}
+          preview={backend.templatePreview(pick.id)}
+          onClose={() => setPick(null)}
+          onUse={async (photo) => {
+            setPick(null);
+            await create(pick.id, { title: pick.title, template: pick.id, ...(photo ? { image: photo } : {}) });
+          }}
+        />
+      )}
     </div>
+  );
+}
+
+function TemplateDialog({ tp, preview, onClose, onUse }: { tp: TemplateInfo; preview: string | null; onClose(): void; onUse(photo?: { name: string; bytes: Uint8Array }): void }) {
+  const { t } = useI18n();
+  const input = useRef<HTMLInputElement>(null);
+  return (
+    <Dialog
+      title={tp.title}
+      width={620}
+      onClose={onClose}
+      footer={
+        <>
+          <span className="mr-auto text-2xs text-fg-faint">{tp.slot ? t("start.slotHint") : ""}</span>
+          {tp.slot && (
+            <button type="button" onClick={() => input.current?.click()} className="flex h-8 items-center gap-1.5 rounded-md bg-ink-3 px-3 text-sm font-medium hover:bg-ink-4">
+              <ImagePlus size={14} /> {t("start.withPhoto")}
+            </button>
+          )}
+          <button type="button" onClick={() => onUse()} className="flex h-8 items-center gap-1.5 rounded-md bg-accent px-3 text-sm font-medium text-ink-0 hover:bg-accent/90">
+            {t("start.useTemplate")} <ArrowRight size={14} />
+          </button>
+          <input
+            ref={input}
+            type="file"
+            accept="image/*"
+            hidden
+            onChange={async (e) => {
+              const f = e.target.files?.[0];
+              e.target.value = "";
+              if (f) onUse((await readFiles([f]))[0]);
+            }}
+          />
+        </>
+      }
+    >
+      <div className="space-y-3 p-4">
+        <div className="overflow-hidden rounded-lg bg-ink-2">
+          <TemplatePreview src={preview} />
+        </div>
+        <p className="text-sm text-fg-muted">{tp.description}</p>
+        <div className="flex flex-wrap gap-1 text-2xs text-fg-faint">
+          <span className="rounded bg-ink-2 px-1.5 py-0.5 tabular-nums">
+            {tp.width} × {tp.height}
+          </span>
+          {tp.tags.map((x) => (
+            <span key={x} className="rounded bg-ink-2 px-1.5 py-0.5">
+              {x}
+            </span>
+          ))}
+        </div>
+      </div>
+    </Dialog>
   );
 }
 

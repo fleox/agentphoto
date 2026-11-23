@@ -1,41 +1,37 @@
-// Marquee tool (M): rectangle / ellipse selection (Shift = square, Alt =
-// from the centre, drag inside to move it). The selection becomes a layer
-// mask, an adjustment layer masked to it, or a crop.
+// Marquee tool (M): rectangle / ellipse selection. Shift adds, Alt
+// subtracts, Shift+Alt intersects (keys at press time); while drawing a new
+// selection Shift = square, Alt = from the centre. Drag inside to move it.
 
 import clsx from "clsx";
-import { Circle, Crop, Layers2, Square, SquareDashed, X } from "lucide-react";
-import { Button } from "../components/ui/controls";
-import { toast } from "../components/ui/Toast";
-import { t, useI18n } from "../i18n";
-import { adjustmentFromMarquee, cropFromMarquee, maskFromMarquee } from "../lib/selection";
+import { Circle, Square, SquareDashed } from "lucide-react";
+import { useI18n } from "../i18n";
+import { combine, modeFromKeys, regionBounds, type Region } from "../lib/region";
 import { dragRect } from "../lib/transform";
-import { useEditor, useUi, type EditorApi } from "../state/context";
-import type { ToolDef } from "./types";
+import { useEditor, useUi } from "../state/context";
+import { RegionBar } from "./regionBar";
+import type { DragSession, PointerInfo, ToolCtx, ToolDef } from "./types";
 
-export function maskSelected(api: EditorApi): void {
-  const m = api.ui.get().marquee;
-  const id = api.store.primary;
-  const doc = api.store.doc;
-  if (!m || !id || !doc) return;
-  const ops = maskFromMarquee(doc, id, m, api.boxes.get(id));
-  if (ops && api.edit(ops)) api.ui.set({ marquee: null });
+// Drag-to-move an existing selection (any kind); null when the press is outside it.
+export function moveRegionSession(ctx: ToolCtx, p: PointerInfo): DragSession | null {
+  const { ui } = ctx.api;
+  const r = ui.get().region;
+  if (!r || p.shift || p.alt) return null;
+  const b = regionBounds(r);
+  if (!b || p.doc.x < b.x || p.doc.x > b.x + b.width || p.doc.y < b.y || p.doc.y > b.y + b.height) return null;
+  if (r.kind === "raster") return null;
+  return {
+    cursor: "move",
+    move(q) {
+      ui.set({ region: { ...r, x: r.x + q.doc.x - p.doc.x, y: r.y + q.doc.y - p.doc.y } });
+    },
+    up() {},
+  };
 }
 
-export function adjustmentFromSelection(api: EditorApi): void {
-  const m = api.ui.get().marquee;
-  const doc = api.store.doc;
-  if (!m || !doc) return;
-  const r = adjustmentFromMarquee(doc, m, api.store.primary, t("layers.adjustmentName"));
-  if (api.edit(r.ops, { select: r.id })) api.ui.set({ marquee: null, rightTab: "filters" });
-}
-
-export function cropToSelection(api: EditorApi): void {
-  const m = api.ui.get().marquee;
-  const doc = api.store.doc;
-  if (!m || !doc) return;
-  const ops = cropFromMarquee(doc, m);
-  if (!ops) return void toast({ tone: "error", title: t("marquee.empty") });
-  if (api.edit(ops)) api.ui.set({ marquee: null, fitRequest: api.ui.get().fitRequest + 1 });
+// Applies a freshly drawn region with the combine mode of the press.
+export function commitRegion(ctx: ToolCtx, fresh: Region, mode: ReturnType<typeof modeFromKeys>): void {
+  const doc = ctx.api.store.doc!;
+  ctx.api.ui.set((s) => ({ region: combine(s.region, fresh, mode, doc.canvas.width, doc.canvas.height) }));
 }
 
 export const marqueeTool: ToolDef = {
@@ -46,35 +42,36 @@ export const marqueeTool: ToolDef = {
   group: "select",
   cursor: () => "crosshair",
   down(ctx, p) {
-    const { ui } = ctx.api;
-    const m = ui.get().marquee;
-    const inside = m && p.doc.x >= m.x && p.doc.x <= m.x + m.width && p.doc.y >= m.y && p.doc.y <= m.y + m.height;
-    if (m && inside && !p.shift && !p.alt) {
-      const start = { ...m };
-      return {
-        cursor: "move",
-        move(q) {
-          ui.set({ marquee: { ...start, x: start.x + q.doc.x - p.doc.x, y: start.y + q.doc.y - p.doc.y } });
-        },
-        up() {},
-      };
-    }
+    const moving = moveRegionSession(ctx, p);
+    if (moving) return moving;
+    const mode = modeFromKeys(p.shift, p.alt);
+    const kind = ctx.api.ui.get().marqueeKind;
     let moved = false;
-    const kind = ui.get().marqueeKind;
+    let rect = { x: 0, y: 0, width: 0, height: 0 };
     return {
       move(q) {
         if (!moved && Math.hypot(q.screen.x - p.screen.x, q.screen.y - p.screen.y) < 3) return;
         moved = true;
-        ui.set({ marquee: { kind, ...dragRect(p.doc, q.doc, q.shift, q.alt) } });
+        rect = mode === "replace" ? dragRect(p.doc, q.doc, q.shift, q.alt) : dragRect(p.doc, q.doc);
+        if (mode === "replace") ctx.api.ui.set({ region: { kind, ...rect } });
+        else ctx.setDraft({ kind, ...rect });
       },
       up() {
-        if (!moved) ui.set({ marquee: null });
+        ctx.setDraft(null);
+        if (!moved) {
+          if (mode === "replace") ctx.api.ui.set({ region: null });
+          return;
+        }
+        if (mode !== "replace") commitRegion(ctx, { kind, ...rect }, mode);
+      },
+      cancel() {
+        ctx.setDraft(null);
       },
     };
   },
   key(ctx, e) {
-    if (e.key === "Escape" && ctx.api.ui.get().marquee) {
-      ctx.api.ui.set({ marquee: null });
+    if (e.key === "Escape" && ctx.api.ui.get().region) {
+      ctx.api.ui.set({ region: null });
       return true;
     }
     return false;
@@ -86,37 +83,17 @@ function MarqueeOptions() {
   const { t } = useI18n();
   const api = useEditor();
   const kind = useUi((s) => s.marqueeKind);
-  const m = useUi((s) => s.marquee);
+  const region = useUi((s) => s.region);
   return (
     <div className="flex items-center gap-1">
       <div className="flex rounded-md bg-ink-2 p-0.5">
         {(["rect", "ellipse"] as const).map((k) => (
-          <button key={k} type="button" title={t(`marquee.${k}`)} aria-label={t(`marquee.${k}`)} onClick={() => api.ui.set({ marqueeKind: k, ...(m ? { marquee: { ...m, kind: k } } : {}) })} className={clsx("flex h-6 w-7 items-center justify-center rounded", kind === k ? "bg-ink-4 text-fg" : "text-fg-muted hover:text-fg")}>
+          <button key={k} type="button" title={t(`marquee.${k}`)} aria-label={t(`marquee.${k}`)} onClick={() => api.ui.set({ marqueeKind: k, ...(region && region.kind !== "raster" ? { region: { ...region, kind: k } } : {}) })} className={clsx("flex h-6 w-7 items-center justify-center rounded", kind === k ? "bg-ink-4 text-fg" : "text-fg-muted hover:text-fg")}>
             {k === "rect" ? <Square size={13} /> : <Circle size={13} />}
           </button>
         ))}
       </div>
-      {m ? (
-        <>
-          <span className="ml-2 mr-1 text-2xs tabular-nums text-fg-faint">
-            {Math.round(m.width)} × {Math.round(m.height)}
-          </span>
-          <Button size="xs" variant="ghost" disabled={!api.store.primary} onClick={() => maskSelected(api)} title={t("marquee.maskHint")}>
-            <SquareDashed size={13} /> {t("marquee.mask")}
-          </Button>
-          <Button size="xs" variant="ghost" onClick={() => adjustmentFromSelection(api)} title={t("marquee.adjustHint")}>
-            <Layers2 size={13} /> {t("marquee.adjust")}
-          </Button>
-          <Button size="xs" variant="ghost" onClick={() => cropToSelection(api)}>
-            <Crop size={13} /> {t("marquee.crop")}
-          </Button>
-          <Button size="xs" variant="ghost" onClick={() => api.ui.set({ marquee: null })}>
-            <X size={13} /> {t("marquee.deselect")}
-          </Button>
-        </>
-      ) : (
-        <span className="ml-2 text-xs text-fg-faint">{t("marquee.hint")}</span>
-      )}
+      <div className="ml-2">{region ? <RegionBar /> : <span className="text-xs text-fg-faint">{t("marquee.hint")}</span>}</div>
     </div>
   );
 }

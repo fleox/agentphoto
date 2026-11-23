@@ -31,6 +31,7 @@ import { EditorContext, useUi, type EditorApi, type RightTab, type UiState } fro
 import { EditorStore, type MutationResult } from "./state/editorStore";
 import { createStore } from "./state/tinyStore";
 import { useShortcuts } from "./state/shortcuts";
+import { TOOLS } from "./tools/registry";
 import { ToolCallError } from "./backend/types";
 
 function initialUi(): UiState {
@@ -38,7 +39,7 @@ function initialUi(): UiState {
   const dialog = urlParam("dialog");
   const tool = urlParam("tool");
   return {
-    tool: (["move", "marquee", "crop", "text", "shape", "hand", "zoom", "eyedropper"].includes(tool ?? "") ? tool : "move") as UiState["tool"],
+    tool: (TOOLS.some((x) => x.id === tool) ? tool : "move") as UiState["tool"],
     shapeKind: "rect",
     marqueeKind: "rect",
     view: { zoom: 1, x: 0, y: 0 },
@@ -49,7 +50,7 @@ function initialUi(): UiState {
     dialog: dialog === "export" || dialog === "shortcuts" ? dialog : null,
     flash: null,
     agentPulse: 0,
-    marquee: null,
+    region: null,
     crop: null,
     textEdit: null,
     fg: "#ffffff",
@@ -65,6 +66,13 @@ function initialUi(): UiState {
     cropRatioId: "free",
     filesVersion: 0,
     collapsed: [],
+    lassoKind: "free",
+    maskTarget: null,
+    brush: { size: 60, hardness: 0.7, opacity: 1, flow: 1 },
+    maskPaint: "hide",
+    cloneSource: null,
+    wand: { tolerance: 24, contiguous: true, sampleAll: false },
+    quick: null,
   };
 }
 
@@ -199,6 +207,7 @@ export function Editor({ backend, onClose }: { backend: Backend; onClose(): void
         })();
       },
       naturalSize: (src) => naturals.get(src),
+      ensureModel: (model) => askConsent(model),
     });
 
     void (async () => {

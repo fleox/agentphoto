@@ -12,7 +12,7 @@ import { normalizeDoc } from "../../core/validate";
 import { Engine, type EngineOptions } from "../../engine";
 import { addAsset } from "../../ops/assets";
 import { OpsError } from "../../ops/context";
-import type { TemplateInfo } from "../../ops/templates";
+import { parseTemplateInfo, type TemplateInfo } from "../../ops/templates";
 import { PersistedFs, projectsDb } from "./idb";
 import { pageEngineHost } from "./pageEngine";
 import { ToolCallError, type AiProgress, type Backend, type CreateOptions, type ProjectRef, type ToolInfo } from "./types";
@@ -21,6 +21,7 @@ import { ToolCallError, type AiProgress, type Backend, type CreateOptions, type 
 // copies them; the dev server serves them from the repo).
 const LIBRARY_BASE = "./library/";
 const ORT_BASE = "./ort/";
+const TEMPLATES_BASE = "./templates/";
 const FS_SCHEME = "apfs:";
 
 const abs = (u: string) => new URL(u, location.href).href;
@@ -48,6 +49,7 @@ export class LocalBackend implements Backend {
   private title = "";
   private thumb: string | undefined;
   private libraryIndex: LibraryIndex = { assets: [] };
+  private templateIndex: (TemplateInfo & { files: string[] })[] = [];
   private blobs = new Map<string, string>();
   private engine: Engine | null = null;
   private uploads = new Map<string, Uint8Array>();
@@ -60,6 +62,13 @@ export class LocalBackend implements Backend {
       if (bytes) this.libraryIndex = JSON.parse(new TextDecoder().decode(bytes)) as LibraryIndex;
     } catch {
       /* no library: fonts fall back to system fonts */
+    }
+    const tpl = await fetchBytes(`${TEMPLATES_BASE}index.json`);
+    try {
+      const list = tpl ? (JSON.parse(new TextDecoder().decode(tpl)) as (Record<string, unknown> & { id: string; files?: string[] })[]) : [];
+      this.templateIndex = list.map((x) => ({ ...parseTemplateInfo(x, x.id), files: Array.isArray(x.files) ? x.files.map(String) : [] }));
+    } catch {
+      this.templateIndex = [];
     }
   }
 
@@ -131,6 +140,19 @@ export class LocalBackend implements Backend {
           return bytes;
         },
       },
+      templates: {
+        index: this.templateIndex,
+        files: async (id) => {
+          const t = this.templateIndex.find((x) => x.id === id);
+          if (!t) throw new OpsError("notFound", `Unknown template "${id}".`);
+          const out: Record<string, Uint8Array> = {};
+          for (const f of t.files) {
+            const bytes = await fetchBytes(`${TEMPLATES_BASE}${id}/${f}`);
+            if (bytes) out[f] = bytes;
+          }
+          return out;
+        },
+      },
       // project_create { image: "uploads/<name>" } reads the bytes the user picked.
       readLocalFile: async (path) => {
         const b = this.uploads.get(path);
@@ -192,10 +214,10 @@ export class LocalBackend implements Backend {
   }
 
   async templates(): Promise<TemplateInfo[]> {
-    return [];
+    return this.templateIndex.map(({ files: _f, ...info }) => info);
   }
-  templatePreview(): string | null {
-    return null;
+  templatePreview(id: string): string | null {
+    return `${TEMPLATES_BASE}${encodeURIComponent(id)}/preview.jpg`;
   }
 
   fileUrl(path: string): Promise<string> {
@@ -206,6 +228,10 @@ export class LocalBackend implements Backend {
   }
   writeFile(path: string, bytes: Uint8Array): Promise<void> {
     return this.requireFs().writeBytes(path, bytes);
+  }
+
+  listFiles(prefix: string): Promise<string[]> {
+    return this.requireFs().list(prefix);
   }
 
   async addImage(name: string, bytes: Uint8Array): Promise<string> {
@@ -234,7 +260,7 @@ export class LocalBackend implements Backend {
     this.thumb = undefined;
     const fs = new PersistedFs(id, {}, () => ({ title: this.title, thumb: this.thumb }));
     this.attach(fs);
-    const input: Record<string, unknown> = { name, title: opts.title };
+    const input: Record<string, unknown> = { name, title: opts.title, ...(opts.template ? { template: opts.template } : {}) };
     if (opts.image || opts.libraryImage) {
       let file = opts.image;
       if (!file && opts.libraryImage) {
@@ -247,7 +273,7 @@ export class LocalBackend implements Backend {
       this.uploads.set(key, file!.bytes);
       input.image = key;
       input.name = name;
-    } else {
+    } else if (!opts.template) {
       input.width = opts.width ?? 1200;
       input.height = opts.height ?? 630;
       if (opts.background !== undefined) input.background = opts.background;

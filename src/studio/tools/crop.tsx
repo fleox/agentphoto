@@ -46,7 +46,7 @@ export const cropTool: ToolDef = {
   shortcut: "C",
   group: "select",
   activate(api) {
-    if (api.store.doc && !api.ui.get().crop) api.ui.set({ crop: full(api), marquee: null });
+    if (api.store.doc && !api.ui.get().crop) api.ui.set({ crop: full(api), region: null });
   },
   deactivate(api) {
     api.ui.set({ crop: null });

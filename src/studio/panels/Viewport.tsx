@@ -12,7 +12,9 @@ import { findLayer } from "../../ops/tree";
 import { useI18n } from "../i18n";
 import { hitTest, movableLayers, unionBox } from "../lib/hit";
 import { formatColor } from "../lib/paint";
-import { HANDLES, handlePoint } from "../lib/transform";
+import { HANDLES, handlePoint, rotate } from "../lib/transform";
+import { regionOutline, type Raster } from "../lib/region";
+import { PAINT_TOOLS } from "../tools/paint";
 import { aabb, boxCorners } from "../render/boxes";
 import { LiveRenderer } from "../render/liveRenderer";
 import { useEditor, useSnapshot, useUi, type View } from "../state/context";
@@ -20,7 +22,7 @@ import { isTyping } from "../state/shortcuts";
 import { toolCtx } from "../state/toolCtx";
 import { handlesFor, rotationHandle } from "../tools/move";
 import { toolById } from "../tools/registry";
-import type { DragSession, PointerInfo, Pt, ToolCtx } from "../tools/types";
+import type { DragSession, PaintOverlay, PointerInfo, Pt, ToolCtx } from "../tools/types";
 import { panSession, zoomAt } from "../tools/view";
 import { TextEditor } from "./TextEditor";
 
@@ -58,7 +60,10 @@ export function Viewport() {
   const view = useUi((s) => s.view);
   const tool = useUi((s) => s.tool);
   const textEdit = useUi((s) => s.textEdit);
-  const marquee = useUi((s) => s.marquee);
+  const region = useUi((s) => s.region);
+  const quick = useUi((s) => s.quick);
+  const brushSize = useUi((s) => s.brush.size);
+  const cloneSource = useUi((s) => s.cloneSource);
   const crop = useUi((s) => s.crop);
   const flash = useUi((s) => s.flash);
   const fitRequest = useUi((s) => s.fitRequest);
@@ -69,6 +74,12 @@ export function Viewport() {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const frameScale = useRef(1);
   const [guides, setGuides] = useState<{ axis: "x" | "y"; at: number }[]>([]);
+  const [path, setPathState] = useState<{ points: Pt[]; closed?: boolean; toCursor?: boolean; cursor?: Pt } | null>(null);
+  const [overlay, setOverlayState] = useState<PaintOverlay | null>(null);
+  const overlayBox = useRef<HTMLDivElement>(null);
+  const brushCursor = useRef<HTMLDivElement>(null);
+  const pointerDoc = useRef<Pt | null>(null);
+  const frameWaiters = useRef<{ seq: number; resolve(): void }[]>([]);
   const [draft, setDraft] = useState<{ kind: "rect" | "ellipse" | "line"; x: number; y: number; width: number; height: number } | null>(null);
   const [hover, setHover] = useState<string | null>(null);
   const [cursor, setCursor] = useState("default");
@@ -94,6 +105,7 @@ export function Viewport() {
         ctx.drawImage(f.canvas, 0, 0);
         frameScale.current = f.scale;
         setReady(true);
+        frameWaiters.current = frameWaiters.current.filter((w) => (f.seq >= w.seq ? (w.resolve(), false) : true));
         ui.set({ renderMs: Math.round(f.ms) });
       }),
     [engine, ui],
@@ -111,8 +123,9 @@ export function Viewport() {
   const editingId = textEdit?.id ?? null;
   useEffect(() => {
     const masked = showMask ? maskPreviewDoc(doc, showMask) : null;
-    renderer.request({ doc: masked ?? doc, scale: renderScale, skip: editingId ? new Set([editingId]) : undefined });
-  }, [renderer, doc, renderScale, editingId, filesVersion, showMask]);
+    const skip = [editingId, overlay?.hide].filter((x): x is string => !!x);
+    renderer.request({ doc: masked ?? doc, scale: renderScale, skip: skip.length ? new Set(skip) : undefined });
+  }, [renderer, doc, renderScale, editingId, filesVersion, showMask, overlay?.hide]);
 
   // ─── view: fit, resize ─────────────────────────────────────────────────
   useLayoutEffect(() => {
@@ -165,8 +178,17 @@ export function Viewport() {
       },
       setGuides,
       setDraft,
+      setPath: (pth) => setPathState(pth ? { ...pth, cursor: pointerDoc.current ?? undefined } : null),
+      setOverlay: (o) => setOverlayState(o),
+      pointer: () => pointerDoc.current,
+      nextFrame: () =>
+        new Promise<void>((resolve) => {
+          // The next request (the edited document) — or now when nothing is pending.
+          frameWaiters.current.push({ seq: renderer.requested + 1, resolve });
+          setTimeout(resolve, 1500);
+        }),
     }),
-    [api, ui],
+    [api, ui, renderer],
   );
   useEffect(() => {
     toolCtx.current = ctx;
@@ -270,6 +292,8 @@ export function Viewport() {
   const onPointerMove = (e: React.PointerEvent) => {
     const p = info(e);
     ui.set({ cursor: { x: Math.floor(p.doc.x), y: Math.floor(p.doc.y) } });
+    pointerDoc.current = p.doc;
+    moveBrushCursor(p.screen);
     const s = session.current;
     if (s) {
       s.move(p);
@@ -278,8 +302,16 @@ export function Viewport() {
     if (space.current) return setCursor("grab");
     const def = toolById(ui.get().tool);
     setCursor(def.cursor(ctx, p));
+    def.hover?.(ctx, p);
     if (def.id === "move" && store.doc) setHover(hitTest(store.doc.layers, boxes.getSnapshot(), p.doc));
     else if (hover) setHover(null);
+  };
+  // The brush circle (painting tools) follows the pointer without re-rendering.
+  const moveBrushCursor = (screen: Pt) => {
+    const el = brushCursor.current;
+    if (!el) return;
+    el.style.transform = `translate(${screen.x}px, ${screen.y}px)`;
+    el.style.display = "block";
   };
   const end = (e: React.PointerEvent, cancel = false) => {
     const s = session.current;
@@ -312,6 +344,7 @@ export function Viewport() {
   const single = selectedBoxLayers.length === 1 && primary && hasBox(primary) ? boxMap.get(primary.id) : undefined;
   const groupBox = !single && selectedBoxLayers.length ? unionBox(boxMap, movableLayers(doc.layers, selection)) : null;
   const showHandles = tool === "move" && single && primary && !primary.locked && !textEdit;
+  const outline = useMemo(() => (region?.kind === "raster" ? regionOutline(region.raster) : null), [region]);
   const flashRecent = flash && Date.now() - flash.at < 3000 ? flash : null;
 
   return (
@@ -329,7 +362,11 @@ export function Viewport() {
       onPointerMove={onPointerMove}
       onPointerUp={(e) => end(e)}
       onPointerCancel={(e) => end(e, true)}
-      onPointerLeave={() => (ui.set({ cursor: null }), setHover(null))}
+      onPointerLeave={() => {
+        ui.set({ cursor: null });
+        setHover(null);
+        if (brushCursor.current) brushCursor.current.style.display = "none";
+      }}
       onContextMenu={(e) => e.preventDefault()}
       onDragOver={(e) => {
         if ([...e.dataTransfer.types].includes("Files")) {
@@ -380,8 +417,39 @@ export function Viewport() {
         {guides.map((g, i) =>
           g.axis === "x" ? <line key={i} x1={view.x + g.at * z} x2={view.x + g.at * z} y1={0} y2="100%" stroke={GUIDE} strokeWidth={1} /> : <line key={i} y1={view.y + g.at * z} y2={view.y + g.at * z} x1={0} x2="100%" stroke={GUIDE} strokeWidth={1} />,
         )}
-        {/* marquee */}
-        {marquee && <MarqueeShape m={marquee} S={S} z={z} />}
+        {/* pixel selection */}
+        {region && region.kind !== "raster" && <MarqueeShape m={region} S={S} z={z} />}
+        {region && region.kind === "raster" && outline && (
+          <g transform={`translate(${view.x} ${view.y}) scale(${z / outline.scale})`}>
+            <path d={outline.d} fill="none" stroke="#000" strokeWidth={outline.scale / z} vectorEffect="non-scaling-stroke" />
+            <path d={outline.d} fill="none" stroke="#fff" strokeWidth={1} strokeDasharray="4 4" className="ants" vectorEffect="non-scaling-stroke" />
+          </g>
+        )}
+        {/* lasso path */}
+        {path && path.points.length > 0 && (
+          <g>
+            <polyline points={[...path.points, ...(path.toCursor && path.cursor ? [path.cursor] : [])].map((q) => `${S(q).x},${S(q).y}`).join(" ")} fill={path.closed ? "rgb(var(--accent) / 0.1)" : "none"} stroke="#000" strokeWidth={1} />
+            <polyline points={[...path.points, ...(path.toCursor && path.cursor ? [path.cursor] : [])].map((q) => `${S(q).x},${S(q).y}`).join(" ")} fill="none" stroke="#fff" strokeWidth={1} strokeDasharray="4 4" className="ants" />
+            {path.toCursor && <circle cx={S(path.points[0]).x} cy={S(path.points[0]).y} r={4} fill="#fff" stroke="rgb(var(--accent))" />}
+          </g>
+        )}
+        {/* clone source */}
+        {tool === "clone" && cloneSource && (
+          <g stroke="#fff" strokeWidth={1.25} style={{ filter: "drop-shadow(0 0 1px #000)" }}>
+            <circle cx={S(cloneSource).x} cy={S(cloneSource).y} r={6} fill="none" />
+            <line x1={S(cloneSource).x - 10} x2={S(cloneSource).x + 10} y1={S(cloneSource).y} y2={S(cloneSource).y} />
+            <line y1={S(cloneSource).y - 10} y2={S(cloneSource).y + 10} x1={S(cloneSource).x} x2={S(cloneSource).x} />
+          </g>
+        )}
+        {/* quick AI select points */}
+        {quick?.points.map(([x, y, label], i) => {
+          const f = boxMap.get(quick.layer);
+          if (!f) return null;
+          const c = { x: f.x + f.width / 2, y: f.y + f.height / 2 };
+          const r = rotate({ x: x - f.width / 2, y: y - f.height / 2 }, f.rotation);
+          const q = S({ x: c.x + r.x, y: c.y + r.y });
+          return <circle key={i} cx={q.x} cy={q.y} r={5} fill={label ? "rgb(var(--agent))" : "rgb(var(--danger))"} stroke="#fff" strokeWidth={1.5} />;
+        })}
         {/* drafts (shape tool) */}
         {draft &&
           (draft.kind === "line" ? (
@@ -404,6 +472,33 @@ export function Viewport() {
           return <div key={`${id}${flashRecent.at}`} className="agent-pulse pointer-events-none absolute rounded-[2px]" style={{ left: view.x + a.x * z, top: view.y + a.y * z, width: a.width * z, height: a.height * z }} />;
         })}
 
+      {/* quick AI select proposal */}
+      {quick?.region && quick.region.kind === "raster" && <RegionTint raster={quick.region.raster} left={view.x} top={view.y} width={W} height={H} />}
+
+      {/* live painting */}
+      {overlay && (
+        <div
+          ref={overlayBox}
+          className="pointer-events-none absolute left-0 top-0"
+          style={{
+            width: overlay.frame.width * z,
+            height: overlay.frame.height * z,
+            transform: `translate(${view.x + overlay.frame.x * z}px, ${view.y + overlay.frame.y * z}px) rotate(${overlay.frame.rotation}deg) scale(${overlay.frame.flipX ? -1 : 1}, ${overlay.frame.flipY ? -1 : 1})`,
+            transformOrigin: "center",
+            opacity: overlay.opacity ?? 1,
+          }}
+        >
+          <OverlayCanvas canvas={overlay.canvas} />
+        </div>
+      )}
+      {PAINT_TOOLS.has(tool) && (
+        <div ref={brushCursor} className="pointer-events-none absolute left-0 top-0 hidden" style={{ display: "none" }}>
+          <div className="absolute rounded-full border border-white" style={{ width: brushSize * z, height: brushSize * z, left: (-brushSize * z) / 2, top: (-brushSize * z) / 2, boxShadow: "0 0 0 1px rgb(0 0 0 / 0.55), inset 0 0 0 1px rgb(0 0 0 / 0.35)" }} />
+          <div className="absolute -left-[3px] top-0 h-px w-[7px] bg-white mix-blend-difference" />
+          <div className="absolute -top-[3px] left-0 h-[7px] w-px bg-white mix-blend-difference" />
+        </div>
+      )}
+
       {textEdit && <TextEditor key={textEdit.id ?? `new${textEdit.x},${textEdit.y}`} />}
 
       {showMask && (
@@ -424,6 +519,42 @@ export function Viewport() {
       )}
     </div>
   );
+}
+
+// Puts a (painter-owned) canvas element in the overlay box.
+function OverlayCanvas({ canvas }: { canvas: HTMLCanvasElement }) {
+  const host = useRef<HTMLDivElement>(null);
+  useLayoutEffect(() => {
+    const el = host.current;
+    if (!el) return;
+    canvas.style.width = "100%";
+    canvas.style.height = "100%";
+    canvas.style.display = "block";
+    el.appendChild(canvas);
+    return () => void canvas.remove();
+  }, [canvas]);
+  return <div ref={host} className="h-full w-full" />;
+}
+
+// A raster region drawn as a translucent tint (quick AI select proposal).
+function RegionTint({ raster, left, top, width, height }: { raster: Raster; left: number; top: number; width: number; height: number }) {
+  const ref = useRef<HTMLCanvasElement>(null);
+  useEffect(() => {
+    const c = ref.current;
+    if (!c) return;
+    c.width = raster.w;
+    c.height = raster.h;
+    const ctx = c.getContext("2d")!;
+    const img = ctx.createImageData(raster.w, raster.h);
+    for (let i = 0; i < raster.data.length; i++) {
+      img.data[i * 4] = 79;
+      img.data[i * 4 + 1] = 209;
+      img.data[i * 4 + 2] = 165;
+      img.data[i * 4 + 3] = raster.data[i] * 0.45;
+    }
+    ctx.putImageData(img, 0, 0);
+  }, [raster]);
+  return <canvas ref={ref} className="pointer-events-none absolute" style={{ left, top, width, height }} />;
 }
 
 function MarqueeShape({ m, S, z }: { m: { kind: "rect" | "ellipse"; x: number; y: number; width: number; height: number }; S: (p: Pt) => Pt; z: number }) {

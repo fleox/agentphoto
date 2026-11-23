@@ -156,7 +156,7 @@ export class RemoteBackend implements Backend {
     await apiJson(`./api/project/${enc(path)}`, { method: "PUT", body: bytes as unknown as BodyInit });
   }
 
-  private async list(prefix: string): Promise<string[]> {
+  async listFiles(prefix: string): Promise<string[]> {
     try {
       const d = await apiJson<string[] | { files: (string | { path: string })[] }>(`./api/project?prefix=${encodeURIComponent(prefix)}`);
       const list = Array.isArray(d) ? d : (d?.files ?? []);
@@ -169,7 +169,7 @@ export class RemoteBackend implements Backend {
   async addImage(name: string, bytes: Uint8Array): Promise<string> {
     const info = imageInfo(bytes);
     const file = safeFileName(name, info ? (info.type === "jpeg" ? "jpg" : info.type) : "png");
-    const taken = new Set(await this.list("assets/images/"));
+    const taken = new Set(await this.listFiles("assets/images/"));
     let path = `assets/images/${file}`;
     for (let k = 2; taken.has(path); k++) path = `assets/images/${file.replace(/(\.[^.]+)?$/, `-${k}$1`)}`;
     await this.writeFile(path, bytes);
@@ -213,6 +213,14 @@ export class RemoteBackend implements Backend {
     const base = { name, title: opts.title, force: true };
     if (opts.template) {
       await this.call("project_create", { ...base, template: opts.template });
+      if (opts.image) {
+        // The photo goes into the template's slot layer (or on top when it has none).
+        const slot = (await this.templates()).find((x) => x.id === opts.template)?.slot;
+        const src = await this.addImage(opts.image.name, opts.image.bytes);
+        const doc = await this.loadDoc();
+        const has = slot && JSON.stringify(doc.layers).includes(`"id":"${slot}"`);
+        await this.call("doc_patch", { ops: has ? [{ op: "updateLayer", id: slot, set: { src, crop: null } }] : [{ op: "addLayer", layer: { id: "photo", type: "image", src, x: 0, y: 0, width: doc.canvas.width, height: doc.canvas.height, fit: "cover" }, index: 0 }] });
+      }
     } else if (opts.image) {
       const info = imageInfo(opts.image.bytes);
       if (!info) throw new ToolCallError("invalid", `${opts.image.name} is not a supported image.`);

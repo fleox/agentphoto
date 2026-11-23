@@ -1,6 +1,5 @@
 // The tool registry: the rail, the shortcuts and the viewport read it.
-// Phase 2 adds painting (brush / eraser / clone → assets/edits/), lasso,
-// magic wand and AI click-select by appending ToolDefs here.
+// A tool = one ToolDef (pointer sessions, keys, options bar); add new ones here.
 
 import { ScanFace, Wand2 } from "lucide-react";
 import { DEFAULT_MODELS } from "../../core/catalog";
@@ -8,12 +7,15 @@ import { findLayer } from "../../ops/tree";
 import type { EditorApi } from "../state/context";
 import { cropTool } from "./crop";
 import { shapeTool, textTool } from "./draw";
+import { lassoTool } from "./lasso";
 import { marqueeTool } from "./marquee";
+import { brushTool, cloneTool, eraserTool } from "./paint";
+import { quickTool, wandTool } from "./wand";
 import { moveTool } from "./move";
 import type { ToolAction, ToolDef, ToolId } from "./types";
 import { eyedropperTool, handTool, zoomTool } from "./view";
 
-export const TOOLS: ToolDef[] = [moveTool, marqueeTool, cropTool, textTool, shapeTool, eyedropperTool, handTool, zoomTool];
+export const TOOLS: ToolDef[] = [moveTool, marqueeTool, lassoTool, wandTool, quickTool, cropTool, textTool, shapeTool, brushTool, eraserTool, cloneTool, eyedropperTool, handTool, zoomTool];
 
 export const toolById = (id: ToolId): ToolDef => TOOLS.find((t) => t.id === id) ?? moveTool;
 

@@ -2,22 +2,24 @@
 // geometry, delete; new masks from the marquee, a shape, a fade, or local AI
 // (remove background / select subject).
 
-import { Circle, Eye, EyeOff, ScanFace, Square, SquareDashed, SunDim, Trash2, Wand2 } from "lucide-react";
+import { Brush, Circle, Eye, EyeOff, ScanFace, Square, SquareDashed, SunDim, Trash2, Wand2 } from "lucide-react";
 import { useState } from "react";
 import { DEFAULT_MODELS, MODELS } from "../../core/catalog";
 import { hasBox, isGradientMask, isImageMask, isShapeMask, type Layer, type Mask } from "../../core/types";
 import { Button, IconButton, Row, Section, Select, Toggle } from "../components/ui/controls";
 import { NumberField, SliderField } from "../components/ui/NumberField";
 import { useI18n } from "../i18n";
-import { marqueeMask } from "../lib/selection";
+import { regionMask } from "../actions/region";
 import { useEditor, useUi } from "../state/context";
 import { removeBackground, selectSubject } from "../tools/registry";
+import { setTool } from "../state/shortcuts";
 
 export function MaskSection({ layer }: { layer: Layer }) {
   const { t } = useI18n();
   const api = useEditor();
-  const marquee = useUi((s) => s.marquee);
+  const region = useUi((s) => s.region);
   const showMask = useUi((s) => s.showMask);
+  const maskTarget = useUi((s) => s.maskTarget);
   const busy = useUi((s) => s.busy);
   const [model, setModel] = useState<string>(DEFAULT_MODELS["background-removal"]);
   const m = layer.mask ?? null;
@@ -65,6 +67,11 @@ export function MaskSection({ layer }: { layer: Layer }) {
           <Row label={t("mask.density")}>
             <SliderField value={Math.round((m.density ?? 1) * 100)} min={0} max={100} integer onChange={(v, final) => patch({ density: v >= 100 ? undefined : v / 100 }, final)} ariaLabel={t("mask.density")} />
           </Row>
+          <div className="px-3 py-1">
+            <Button size="xs" variant={maskTarget === layer.id ? "primary" : "subtle"} onClick={() => (api.ui.set({ maskTarget: layer.id }), setTool(api, "brush"))}>
+              <Brush size={12} /> {t("mask.paint")}
+            </Button>
+          </div>
           {isShapeMask(m) && (
             <>
               <Row label={t("mask.shape")}>
@@ -88,7 +95,7 @@ export function MaskSection({ layer }: { layer: Layer }) {
         </>
       ) : (
         <div className="grid grid-cols-2 gap-1 px-3 pb-1">
-          <Button size="xs" variant="subtle" disabled={!marquee} title={marquee ? undefined : t("mask.needMarquee")} onClick={() => marquee && (setMask(marqueeMask(layer, marquee, box)), api.ui.set({ marquee: null }))}>
+          <Button size="xs" variant="subtle" disabled={!region} title={region ? undefined : t("mask.needMarquee")} onClick={() => region && void regionMask(api, layer, region).then((mask) => (setMask(mask), api.ui.set({ region: null })))}>
             <SquareDashed size={12} /> {t("mask.fromSelection")}
           </Button>
           <Button size="xs" variant="subtle" onClick={() => setMask({ shape: "ellipse", x: W * 0.15, y: H * 0.15, width: W * 0.7, height: H * 0.7, feather: Math.round(Math.min(W, H) / 20) })}>

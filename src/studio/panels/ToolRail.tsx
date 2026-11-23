@@ -32,7 +32,7 @@ export function ToolRail() {
   const fg = useUi((s) => s.fg);
   useSnapshot(); // AI actions depend on the selection
   const [flyout, setFlyout] = useState(false);
-  const groups = ["select", "draw", "view"] as const;
+  const groups = ["select", "draw", "paint", "view"] as const;
   return (
     <nav aria-label={t("tools.title")} className="flex w-11 shrink-0 flex-col items-center gap-0.5 border-r border-line bg-ink-1 py-2">
       {groups.map((g, gi) => (

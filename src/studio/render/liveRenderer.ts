@@ -17,11 +17,15 @@ export interface Frame {
   canvas: AnyCanvas;
   scale: number;
   ms: number;
+  // Sequence number of the request this frame answers (see `requested`).
+  seq: number;
   errors: { layer: string; message: string }[];
 }
 
 export class LiveRenderer {
-  private pending: RenderRequest | null = null;
+  private pending: (RenderRequest & { seq: number }) | null = null;
+  // Number of requests so far.
+  requested = 0;
   private running = false;
   private raf = 0;
   private disposed = false;
@@ -32,7 +36,7 @@ export class LiveRenderer {
   ) {}
 
   request(req: RenderRequest): void {
-    this.pending = req;
+    this.pending = { ...req, seq: ++this.requested };
     if (this.running || this.raf) return;
     this.raf = requestAnimationFrame(() => {
       this.raf = 0;
@@ -49,12 +53,16 @@ export class LiveRenderer {
     const errors: Frame["errors"] = [];
     try {
       const canvas = await this.engine.render(req.doc, { scale: req.scale, skip: req.skip, only: req.only, onError: (layer, message) => errors.push({ layer, message }) });
-      if (!this.disposed) this.onFrame({ canvas, scale: req.scale, ms: performance.now() - t0, errors });
+      if (!this.disposed) this.onFrame({ canvas, scale: req.scale, ms: performance.now() - t0, seq: req.seq, errors });
     } catch (e) {
-      if (!this.disposed) this.onFrame({ canvas: null as unknown as AnyCanvas, scale: req.scale, ms: performance.now() - t0, errors: [{ layer: "*", message: (e as Error).message }] });
+      if (!this.disposed) this.onFrame({ canvas: null as unknown as AnyCanvas, scale: req.scale, ms: performance.now() - t0, seq: req.seq, errors: [{ layer: "*", message: (e as Error).message }] });
     } finally {
       this.running = false;
-      if (this.pending && !this.disposed) this.request(this.pending);
+      if (this.pending && !this.disposed && !this.raf)
+        this.raf = requestAnimationFrame(() => {
+          this.raf = 0;
+          void this.run();
+        });
     }
   }
 

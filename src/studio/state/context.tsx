@@ -8,6 +8,7 @@ import type { Backend, ToolInfo } from "../backend/types";
 import type { MessageKey } from "../i18n";
 import type { BoxTracker } from "../render/boxes";
 import type { ToolId } from "../tools/types";
+import type { Region, ShapeRegion } from "../lib/region";
 import type { EditorSnapshot, EditorStore } from "./editorStore";
 import { useStore, type TinyStore } from "./tinyStore";
 
@@ -23,13 +24,27 @@ export interface View {
   y: number;
 }
 
-// Marquee selection, document px.
-export interface Marquee {
-  kind: "rect" | "ellipse";
-  x: number;
-  y: number;
-  width: number;
-  height: number;
+// Marquee selection (shape region), document px.
+export type Marquee = ShapeRegion;
+export type { Region };
+
+export interface BrushSettings {
+  // Diameter, document px.
+  size: number;
+  // 0..1: hard edge … soft.
+  hardness: number;
+  // 0..1: max coverage of one stroke.
+  opacity: number;
+  // 0..1: coverage added per dab.
+  flow: number;
+}
+
+// Quick AI select session: prompt points on a layer and the live result.
+export interface QuickSelect {
+  layer: string;
+  points: [number, number, number][];
+  region: Region | null;
+  busy: boolean;
 }
 
 export interface Rect {
@@ -74,7 +89,8 @@ export interface UiState {
   dialog: DialogId;
   flash: { ids: string[]; at: number } | null;
   agentPulse: number;
-  marquee: Marquee | null;
+  // The pixel selection (marquee, lasso, wand, AI select).
+  region: Region | null;
   crop: Rect | null;
   textEdit: TextEdit | null;
   // Foreground colour (new text / shapes, eyedropper).
@@ -93,6 +109,15 @@ export interface UiState {
   // Bumped when project files change (re-render).
   filesVersion: number;
   collapsed: string[];
+  lassoKind: "free" | "poly";
+  // Paint into this layer's mask instead of its pixels (mask chip targeted).
+  maskTarget: string | null;
+  brush: BrushSettings;
+  // Mask painting: the brush hides (black) or reveals (white).
+  maskPaint: "hide" | "reveal";
+  cloneSource: { x: number; y: number } | null;
+  wand: { tolerance: number; contiguous: boolean; sampleAll: boolean };
+  quick: QuickSelect | null;
 }
 
 export interface EditorApi {
@@ -113,6 +138,8 @@ export interface EditorApi {
   reloadDoc(opts?: { toast?: boolean }): Promise<void>;
   // Runs a tool on the project (flushes local edits first, reloads after mutating ones).
   runTool<T = unknown>(name: string, input: Record<string, unknown>, opts?: { busy?: MessageKey; model?: string; flash?: boolean }): Promise<T | null>;
+  // Asks once for the AI model download (consent); false = declined.
+  ensureModel(model: string): Promise<boolean>;
   importImages(files: { name: string; bytes: Uint8Array }[], at?: { x: number; y: number }): Promise<void>;
   closeProject(): void;
   // Natural size of image sources (known after they load).

@@ -17,6 +17,7 @@ import { LayerThumb, MaskThumb } from "../render/thumbs";
 import { useEditor, useSnapshot, useUi } from "../state/context";
 import { deleteSelection, duplicateSelection, groupSelection, setTool, ungroupSelection } from "../state/shortcuts";
 import { MOD } from "./TopBar";
+import { rasterizeLayer } from "../actions/layer";
 import { readFiles } from "./Viewport";
 
 export function toggleEnabled(m: Mask): Mask {
@@ -34,6 +35,7 @@ export function LayersPanel() {
   const doc = snap.doc!;
   const collapsed = useUi((s) => s.collapsed);
   const flash = useUi((s) => s.flash);
+  const maskTarget = useUi((s) => s.maskTarget);
   const rows = layerRows(doc.layers, new Set(collapsed));
   const sel = snap.selection;
   const primary = sel.length ? findLayer(doc.layers, sel[sel.length - 1])?.layer : undefined;
@@ -89,7 +91,7 @@ export function LayersPanel() {
       "-",
       { label: t("layers.maskInvert"), icon: <SquareDashed size={13} />, disabled: !l.mask, run: () => l.mask && api.edit([{ op: "setMask", id, mask: { ...l.mask, invert: !l.mask.invert } }]) },
       { label: t("layers.maskRemove"), icon: <Square size={13} />, disabled: !l.mask, run: () => api.edit([{ op: "setMask", id, mask: null }]) },
-      { label: t("layers.rasterize"), icon: <Layers size={13} />, disabled: true, run: () => undefined },
+      { label: t("layers.rasterize"), icon: <Layers size={13} />, disabled: !(l.type === "text" || l.type === "shape" || l.type === "fill"), run: () => void rasterizeLayer(api, id) },
       "-",
       { label: t("layers.delete"), icon: <Trash2 size={13} />, keys: "⌫", danger: true, run: () => deleteSelection(api) },
     ];
@@ -215,9 +217,14 @@ export function LayersPanel() {
                   onClick={(e) => {
                     e.stopPropagation();
                     if (e.altKey) ui.set((s) => ({ showMask: s.showMask === l.id ? null : l.id }));
-                    else api.edit([{ op: "setMask", id: l.id, mask: toggleEnabled(l.mask!) }]);
+                    else if (e.shiftKey) api.edit([{ op: "setMask", id: l.id, mask: toggleEnabled(l.mask!) }]);
+                    else {
+                      // Target the mask (painting tools paint it), like Photoshop.
+                      store.select(l.id);
+                      ui.set((s) => ({ maskTarget: s.maskTarget === l.id ? null : l.id }));
+                    }
                   }}
-                  className={clsx("relative shrink-0 rounded-[3px] ring-1", l.mask.enabled === false ? "opacity-50 ring-danger/60" : "ring-white/15 hover:ring-accent")}
+                  className={clsx("relative shrink-0 rounded-[3px]", maskTarget === l.id ? "ring-2 ring-accent" : "ring-1", l.mask.enabled === false ? "opacity-50 ring-danger/60" : maskTarget !== l.id && "ring-white/15 hover:ring-accent")}
                 >
                   <MaskThumb mask={l.mask} w={22} h={28} frame={l.type === "image" || l.type === "text" || l.type === "shape" ? api.boxes.get(l.id) : doc.canvas} />
                   {l.mask.enabled === false && <span className="absolute inset-0 flex items-center justify-center text-sm font-bold text-danger">×</span>}
