@@ -64,19 +64,21 @@ function parseZoom(raw: string): { x: number; y: number; width: number; height: 
 export const renderCommand: Command = {
   name: "render",
   usage: "render [--max-width <px>] [--compare] [--layer <id>] [--zoom x,y,w,h]",
-  summary: "Render the document headless (Chrome) to renders/preview-N.png and print the image path(s) — LOOK at them after every visual change. --compare also renders the unedited 'before', --layer one layer alone, --zoom a canvas region at 1:1 (mask edges, text).",
+  summary: "Render the document headless (Chrome) to renders/preview.png and print the image path(s) — LOOK at them after every visual change. --compare also renders the unedited 'before', --layer one layer alone, --zoom a canvas region at 1:1 (mask edges, text).",
   options: [
     PROJECT_OPTION,
     { name: "max-width", type: "string", description: "Preview width cap in px (default 1000)." },
     { name: "compare", type: "boolean", description: "Also render the version without filters / adjustments (before / after)." },
     { name: "layer", type: "string", description: "Render only this layer." },
     { name: "zoom", type: "string", description: "Canvas region x,y,width,height rendered at full resolution (max 1600 px)." },
+    { name: "backdrop", type: "string", description: 'Under transparent areas: "checker" (default for transparent canvases and --layer), a CSS colour, or "none".' },
   ],
   async run({ io, options }) {
     const fs = projectFs(options);
     const input: Record<string, unknown> = {};
     if (numOpt(options, "max-width") !== undefined) input.maxWidth = numOpt(options, "max-width");
     if (boolOpt(options, "compare")) input.compare = true;
+    if (strOpt(options, "backdrop")) input.backdrop = strOpt(options, "backdrop");
     if (strOpt(options, "layer")) input.layer = strOpt(options, "layer");
     if (strOpt(options, "zoom")) input.zoom = parseZoom(strOpt(options, "zoom")!);
     const r = await tool<{ preview: string; images: string[]; size: string; canvas: string; errors?: unknown[]; hint?: string }>(fs, "render_preview", input);

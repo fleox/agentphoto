@@ -40,12 +40,12 @@ const api = {
     return true;
   },
   // Full render as PNG (or JPEG for previews), optionally scaled to fit maxWidth / maxHeight.
-  async render(doc: PhotoDoc, opts: { scale?: number; maxWidth?: number; maxHeight?: number; format?: "png" | "jpeg"; quality?: number; only?: string[]; background?: boolean } = {}) {
+  async render(doc: PhotoDoc, opts: { backdrop?: string; scale?: number; maxWidth?: number; maxHeight?: number; format?: "png" | "jpeg"; quality?: number; only?: string[]; background?: boolean } = {}) {
     errors.length = 0;
     let scale = opts.scale ?? 1;
     if (opts.maxWidth) scale = Math.min(scale, opts.maxWidth / doc.canvas.width);
     if (opts.maxHeight) scale = Math.min(scale, opts.maxHeight / doc.canvas.height);
-    const c = await need().render(doc, { scale, background: opts.background, only: opts.only ? new Set(opts.only) : undefined, onError: (layer, message) => errors.push({ layer, message }) });
+    const c = await need().render(doc, { scale, backdrop: opts.backdrop, background: opts.background, only: opts.only ? new Set(opts.only) : undefined, onError: (layer, message) => errors.push({ layer, message }) });
     const e = await encode(c, opts.format === "jpeg" ? "image/jpeg" : "image/png", opts.quality ?? 88);
     return { ...b64(e), scale, errors: [...errors] };
   },

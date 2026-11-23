@@ -33,6 +33,8 @@ export interface RenderOptions {
   scale?: number;
   // Draw canvas.background (default true).
   background?: boolean;
+  // Under everything (previews of transparent images): "checker" or a CSS colour.
+  backdrop?: string;
   // Layers to skip (the Studio hides a layer being edited, e.g. live text).
   skip?: ReadonlySet<string>;
   // Render only these layer ids (and the groups holding them) — isolate.
@@ -76,6 +78,16 @@ export class Compositor {
     const H = Math.max(1, Math.round(doc.canvas.height * s));
     const out = createCanvas(W, H);
     const ctx = ctx2d(out);
+    if (opts.backdrop === "checker") {
+      const cell = Math.max(6, Math.round(12 * Math.min(1, s * 2)));
+      ctx.fillStyle = "#ffffff";
+      ctx.fillRect(0, 0, W, H);
+      ctx.fillStyle = "#d9d9d9";
+      for (let y = 0; y < H; y += cell) for (let x = (y / cell) % 2 ? cell : 0; x < W; x += cell * 2) ctx.fillRect(x, y, cell, cell);
+    } else if (opts.backdrop) {
+      ctx.fillStyle = opts.backdrop;
+      ctx.fillRect(0, 0, W, H);
+    }
     if (opts.background !== false && doc.canvas.background) {
       ctx.fillStyle = fillStyle(ctx, doc.canvas.background, { x: 0, y: 0, w: W, h: H });
       ctx.fillRect(0, 0, W, H);

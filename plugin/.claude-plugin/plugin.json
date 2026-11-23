@@ -1,0 +1,19 @@
+{
+  "name": "agentphoto",
+  "version": "0.1.0",
+  "description": "Skills to run AgentPhoto (the photo studio your AI agent can run): retouch photos (colour and light correction, looks, portrait retouch, crop and straighten), remove backgrounds and make masks with local AI, build social / marketing visuals from templates with text, shapes and layer effects, look at headless renders to check every change, and export PNG / JPEG / WebP in every size. Non-destructive JSON layer stack, nothing uploaded, no server, no account.",
+  "author": {
+    "name": "fleox"
+  },
+  "homepage": "https://github.com/fleox/agentphoto",
+  "repository": "https://github.com/fleox/agentphoto",
+  "license": "PolyForm-Noncommercial-1.0.0",
+  "keywords": [
+    "photo",
+    "image-editing",
+    "retouch",
+    "background-removal",
+    "design",
+    "mcp"
+  ]
+}

@@ -336,7 +336,7 @@ describe("engine tools with a fake EngineHost", () => {
     const { engine, calls } = fakeEngine();
     const c = await ctx({ engine });
     const r = (await callAiTool(c, "export", { format: "jpeg" })) as { files: { path: string; format: string; width: number }[] };
-    expect(r.files).toEqual([expect.objectContaining({ path: "dist/tool-test.jpg", format: "jpg", width: 400, height: 200, kb: expect.any(Number) })]);
+    expect(r.files).toEqual([expect.objectContaining({ path: "dist/tool-test.jpg", format: "jpeg", width: 400, height: 200, kb: expect.any(Number) })]);
     expect(await c.fs.exists("dist/tool-test.jpg")).toBe(true);
     const v = (await callAiTool(c, "export", { format: "png", out: "ignored.png", variants: [{ preset: "og" }, { preset: "square", format: "webp" }, { scale: 0.5 }] })) as { files: { path: string }[] };
     expect(v.files.map((f) => f.path)).toEqual(["dist/tool-test-og.png", "dist/tool-test-square.webp", "dist/tool-test-200x100.png"]);

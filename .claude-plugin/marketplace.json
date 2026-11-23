@@ -1,0 +1,24 @@
+{
+  "name": "agentphoto",
+  "owner": {
+    "name": "fleox"
+  },
+  "description": "AgentPhoto — the photo studio your AI agent can run: retouching, background removal, masks, looks, text and social / ad / thumbnail formats as a non-destructive JSON document, previewed headless and exported as PNG / JPEG / WebP. Local, no server, no account.",
+  "plugins": [
+    {
+      "name": "agentphoto",
+      "source": "./plugin",
+      "description": "Skills to retouch photos, cut out subjects and replace backgrounds with local AI, design thumbnails, link previews, stories and banners from templates, look at headless renders and fix them, and export every size the user needs.",
+      "category": "design",
+      "tags": [
+        "photo",
+        "image-editing",
+        "retouch",
+        "background-removal",
+        "thumbnail",
+        "social-media",
+        "mcp"
+      ]
+    }
+  ]
+}

@@ -42,7 +42,7 @@ export interface SegmentPrompt {
 
 // What renders pixels: headless Chrome (CLI / MCP / Studio API) or the page itself (Studio, in-browser projects).
 export interface EngineHost {
-  render(doc: PhotoDoc, opts: { scale?: number; maxWidth?: number; maxHeight?: number; format?: "png" | "jpeg"; only?: string[] }): Promise<EncodedImage>;
+  render(doc: PhotoDoc, opts: { backdrop?: string; scale?: number; maxWidth?: number; maxHeight?: number; format?: "png" | "jpeg"; only?: string[] }): Promise<EncodedImage>;
   exportImage(doc: PhotoDoc, job: ExportJob): Promise<EncodedImage>;
   analyze(doc: PhotoDoc, opts: { layer?: string }): Promise<ImageStats>;
   backgroundMask(doc: PhotoDoc, id: string, opts: { model?: string; feather?: number; threshold?: number }): Promise<EncodedImage>;

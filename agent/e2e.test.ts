@@ -40,7 +40,7 @@ describe.skipIf(!CAN_RUN)("headless engine (Chrome)", () => {
       expect(stats.dominant.length).toBeGreaterThan(0);
 
       const ex = await ok(["export", "--project", dir, "--variants", '[{"format":"png"},{"format":"jpeg","preset":"square"}]']);
-      expect(ex.files.map((f: { format: string }) => f.format)).toEqual(["png", "jpg"]);
+      expect(ex.files.map((f: { format: string }) => f.format)).toEqual(["png", "jpeg"]);
       const png = readFileSync(ex.files[0].file);
       expect(isPng(png)).toBe(true);
       expect(pngSize(png)).toEqual([1200, 630]);

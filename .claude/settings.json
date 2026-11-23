@@ -1,0 +1,37 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(npm run typecheck)",
+      "Bash(npm run build)",
+      "Bash(npm run build:engine)",
+      "Bash(npm run build:studio)",
+      "Bash(npm run build:agent)",
+      "Bash(npm test)",
+      "Bash(npm run check:skills)",
+      "Bash(npm run docs:cli)",
+      "Bash(npm run check:docs)",
+      "Bash(npx vitest run *)",
+      "Bash(npx tsc --noEmit *)",
+      "Bash(node scripts/check-skills.mjs)",
+      "Bash(node scripts/build-cli-docs.mjs *)",
+      "Bash(node scripts/build-library.mjs --check)",
+      "Bash(node dist/agent/agentphoto.mjs help)",
+      "Bash(node dist/agent/agentphoto.mjs help *)",
+      "Bash(node dist/agent/agentphoto.mjs version *)",
+      "Bash(node dist/agent/agentphoto.mjs doctor *)",
+      "Bash(node dist/agent/agentphoto.mjs catalog *)",
+      "Bash(node dist/agent/agentphoto.mjs templates *)",
+      "Bash(node dist/agent/agentphoto.mjs models list *)",
+      "Bash(node dist/agent/agentphoto.mjs doc validate *)",
+      "Bash(node dist/agent/agentphoto.mjs doc summary *)",
+      "Bash(node dist/agent/agentphoto.mjs info *)",
+      "Bash(node dist/agent/agentphoto.mjs check *)",
+      "Bash(node dist/agent/agentphoto.mjs render *)",
+      "Bash(node dist/agent/agentphoto.mjs analyze *)",
+      "Bash(git status *)",
+      "Bash(git diff *)",
+      "Bash(git log *)",
+      "Bash(git check-ignore *)"
+    ]
+  }
+}

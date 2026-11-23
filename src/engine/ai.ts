@@ -58,7 +58,7 @@ function progressCb(model: string) {
     else if (data.status === "initiate" && !files.has(data.file)) files.set(data.file, 0);
     const v = [...files.values()];
     const avg = v.length ? v.reduce((a, b) => a + b, 0) / v.length : 0;
-    configured.onProgress?.({ model, progress: avg / 100, label: `Downloading ${model} (${Math.round(avg)} %)` });
+    configured.onProgress?.({ model, progress: avg / 100, label: `Loading ${model} (${Math.round(avg)} %)` });
   };
 }
 

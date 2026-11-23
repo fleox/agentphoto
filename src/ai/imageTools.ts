@@ -40,12 +40,13 @@ function disableEdits(doc: PhotoDoc): PhotoDoc {
 }
 
 // Writes a mask PNG and points the layer's mask at it (old generated mask removed when unused).
-async function writeMask(ctx: ToolContext, doc: PhotoDoc, id: string, img: EncodedImage, opts: { invert?: boolean; feather?: number; label: string; extraOps?: PatchOp[]; source: string }) {
+async function writeMask(ctx: ToolContext, doc: PhotoDoc, id: string, img: EncodedImage, opts: { invert?: boolean; feather?: number; label: string; extraOps?: PatchOp[]; preOps?: PatchOp[]; maskId?: string; source: string }) {
   const layer = layerOf(doc, id);
-  const entry = await addAsset(ctx.fs, { name: `${id}-${opts.label}.png`, bytes: img.bytes, kind: "mask", source: opts.source });
+  const target = opts.maskId ?? id;
+  const entry = await addAsset(ctx.fs, { name: `${target}-${opts.label}.png`, bytes: img.bytes, kind: "mask", source: opts.source });
   const mask = { src: entry.path, ...(opts.invert ? { invert: true } : {}), ...(opts.feather ? { feather: opts.feather } : {}) };
   // A refused / failing patch must not leave an orphan mask file behind.
-  const r = await patchDoc(ctx.fs, [{ op: "setMask", id, mask }, ...(opts.extraOps ?? [])]).catch(async (e) => {
+  const r = await patchDoc(ctx.fs, [...(opts.preOps ?? []), { op: "setMask", id: target, mask }, ...(opts.extraOps ?? [])]).catch(async (e) => {
     await removeGenerated(ctx.fs, entry.path);
     throw e;
   });
@@ -89,6 +90,7 @@ export const IMAGE_TOOLS: AiTool[] = [
         compare: { type: "boolean", description: "Also render the unedited version (before / after)." },
         layer: { type: "string", description: "Render only this layer (and the groups holding it)." },
         zoom: { type: "object", description: "Canvas region { x, y, width, height } rendered at 1:1 (max 1600 px).", additionalProperties: true },
+        backdrop: { type: "string", description: 'Under transparent areas: "checker" (default when the canvas is transparent or a layer is isolated), a CSS colour, or "none".' },
       },
     },
     mutating: false,
@@ -104,7 +106,8 @@ export const IMAGE_TOOLS: AiTool[] = [
       }
       const only = optStr(input, "layer");
       if (only) layerOf(doc, only);
-      const opts = { maxWidth: zoom ? undefined : maxWidth, maxHeight: zoom ? undefined : Math.max(maxWidth, 1000), only: only ? [only] : undefined, format: "png" as const };
+      const bd = optStr(input, "backdrop") ?? (only || !doc.canvas.background ? "checker" : "none");
+      const opts = { backdrop: bd === "none" ? undefined : bd, maxWidth: zoom ? undefined : maxWidth, maxHeight: zoom ? undefined : Math.max(maxWidth, 1000), only: only ? [only] : undefined, format: "png" as const };
       const after = await e.render(doc, opts);
       const path = "renders/preview.png";
       await ctx.fs.writeBytes(path, after.bytes);
@@ -126,7 +129,7 @@ export const IMAGE_TOOLS: AiTool[] = [
   },
   {
     name: "export",
-    description: `Render the final image(s) into dist/ (or out): format png | jpeg | webp | avif, quality, size (preset: ${SIZE_PRESETS.map((s) => s.id).join(", ")} — or width / height / scale), fit (cover crops, contain pads) and background (flatten transparency). variants: several outputs at once (e.g. og + square + story). Run check first.`,
+    description: `Render the final image(s) into dist/ (or out): format png | jpeg | webp | avif (AVIF only where the browser can encode it — otherwise PNG, with a note), quality, size (preset: ${SIZE_PRESETS.map((s) => s.id).join(", ")} — or width / height / scale), fit (cover crops, contain pads) and background (flatten transparency). variants: several outputs at once (e.g. og + square + story). Run check first.`,
     inputSchema: {
       type: "object",
       properties: {
@@ -172,7 +175,8 @@ export const IMAGE_TOOLS: AiTool[] = [
           note = `${job.format.toUpperCase()} encoding is not supported by this browser: written as ${img.mime}.`;
         }
         await ctx.fs.writeBytes(path, img.bytes);
-        files.push({ path, format: EXT[img.mime] ?? job.format, width: img.width, height: img.height, kb: Math.round(img.bytes.byteLength / 102.4) / 10, ...(note ? { note } : {}) });
+        if (job.scale > 1.05) note = `${note ? `${note} ` : ""}Upscaled ×${Math.round(job.scale * 100) / 100} from the ${doc.canvas.width}×${doc.canvas.height} canvas: it may look soft.`;
+        files.push({ path, format: img.mime === "image/jpeg" ? "jpeg" : (EXT[img.mime] ?? job.format), width: img.width, height: img.height, kb: Math.round(img.bytes.byteLength / 102.4) / 10, ...(note ? { note } : {}) });
       }
       return { files, hint: "Done. Tell the user where the files are; offer other sizes (variants) if useful." };
     },
@@ -269,8 +273,7 @@ export const IMAGE_TOOLS: AiTool[] = [
       const invert = bool(input, "invert");
       if (target === "copy") {
         const copyId = uniqueId(optStr(input, "copyId") ?? `${id}-cutout`, allLayerIds(doc));
-        await patchDoc(ctx.fs, [{ op: "duplicateLayer", id, newId: copyId }]);
-        const r = await writeMask(ctx, await getDoc(ctx.fs), copyId, img, { label: method, invert, source: `mask_generate:${method}` });
+        const r = await writeMask(ctx, doc, id, img, { label: method, invert, source: `mask_generate:${method}`, preOps: [{ op: "duplicateLayer", id, newId: copyId }], maskId: copyId });
         return { ...r, layer: copyId };
       }
       return writeMask(ctx, doc, id, img, { label: method, invert, source: `mask_generate:${method}` });
