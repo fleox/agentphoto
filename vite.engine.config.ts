@@ -15,7 +15,7 @@ function copyOrt(): Plugin {
       const out = join("dist", "engine", "ort");
       if (!existsSync(src)) return;
       mkdirSync(out, { recursive: true });
-      for (const f of readdirSync(src)) if (/^ort-wasm-simd-threaded(\.[a-z]+)?\.(mjs|wasm)$/.test(f)) copyFileSync(join(src, f), join(out, f));
+      for (const f of readdirSync(src)) if (/^ort-wasm-simd-threaded\.asyncify\.(mjs|wasm)$/.test(f)) copyFileSync(join(src, f), join(out, f));
     },
   };
 }
