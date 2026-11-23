@@ -1,0 +1,8 @@
+node_modules
+dist
+.DS_Store
+*.log
+.agentphoto-tmp
+coverage
+.claude/worktrees
+dist/version.json

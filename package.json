@@ -1,0 +1,64 @@
+{
+  "name": "@fleox/agentphoto",
+  "version": "0.1.0",
+  "type": "module",
+  "description": "The photo studio your AI agent can run: retouch, layers, masks, background removal, subject cutout, filters and looks as a non-destructive JSON document, previewed headless and exported as PNG / JPEG / WebP. With a Studio to finish by hand. No server, no account.",
+  "license": "SEE LICENSE IN LICENSE",
+  "engines": {
+    "node": ">=22"
+  },
+  "bin": {
+    "agentphoto": "dist/agent/agentphoto.mjs"
+  },
+  "files": [
+    "dist/agent",
+    "dist/engine",
+    "dist/studio",
+    "library",
+    "templates",
+    "plugin",
+    "changelog.json",
+    "README.md",
+    "LICENSE"
+  ],
+  "scripts": {
+    "dev": "vite",
+    "typecheck": "tsc --noEmit && tsc --noEmit -p tsconfig.agent.json",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "build:engine": "vite build --config vite.engine.config.ts",
+    "build:studio": "vite build",
+    "build:agent": "vite build --config vite.agent.config.ts",
+    "build": "npm run build:engine && npm run build:studio && npm run build:agent && node scripts/write-version.mjs",
+    "check:skills": "node scripts/check-skills.mjs",
+    "docs:cli": "node scripts/build-cli-docs.mjs",
+    "check:docs": "node scripts/build-cli-docs.mjs --check",
+    "version": "node scripts/sync-version.mjs && npm run build && node scripts/build-cli-docs.mjs && git add -A plugin .claude-plugin README.md docs",
+    "prepublishOnly": "npm run typecheck && npm test && npm run build && npm run check:skills"
+  },
+  "devDependencies": {
+    "@huggingface/transformers": "^4.3.2",
+    "@types/node": "^26.6.6",
+    "@types/react": "^19.3.0",
+    "@types/react-dom": "^19.3.0",
+    "@vitejs/plugin-react": "^6.3.0",
+    "autoprefixer": "^10.7.0",
+    "clsx": "^2.1.1",
+    "happy-dom": "^21.0.4",
+    "lucide-react": "^1.78.0",
+    "postcss": "^8.5.33",
+    "react": "^19.3.1",
+    "react-dom": "^19.3.1",
+    "tailwindcss": "^3.4.19",
+    "typescript": "^7.0.2",
+    "vite": "^8.3.8",
+    "vitest": "^5.1.1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/fleox/agentphoto.git"
+  },
+  "publishConfig": {
+    "access": "public"
+  }
+}
