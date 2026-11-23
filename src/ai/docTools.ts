@@ -87,7 +87,9 @@ async function readInputImage(ctx: ToolContext, input: Record<string, unknown>, 
     if (/^https?:\/\//.test(file)) return readUrl(ctx, file);
     if (!ctx.host?.readLocalFile) throw new OpsError("invalid", `${what}: this host cannot read local files.`, "Use url, or import the file from the Studio (drag & drop).");
     const bytes = await ctx.host.readLocalFile(file);
-    return { name: optStr(input, "name") ?? file.split(/[\\/]/).pop() ?? "image", bytes, source: "user" };
+    // assets_add { name } renames the file; project_create's "name" is the project's, not the photo's.
+    const rename = what === "assets_add" ? optStr(input, "name") : undefined;
+    return { name: rename ?? file.split(/[\\/]/).pop() ?? "image", bytes, source: "user" };
   }
   if (url) return readUrl(ctx, url);
   return null;

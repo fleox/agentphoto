@@ -449,7 +449,7 @@ export const SIZE_PRESETS: SizePreset[] = [
 // ─── AI models (downloaded once on first use, cached on this computer) ───
 
 export const MODELS: ModelDef[] = [
-  { id: "rmbg-1.4", task: "background-removal", repo: "briaai/RMBG-1.4", sizeMb: 44, license: "bria-rmbg-1.4 (non-commercial)", description: "General background removal — products, people, animals, objects. Best default." },
+  { id: "rmbg-1.4", task: "background-removal", repo: "briaai/RMBG-1.4", sizeMb: 168, license: "bria-rmbg-1.4 (non-commercial)", description: "General background removal — products, people, animals, objects. Best default." },
   { id: "modnet", task: "background-removal", repo: "Xenova/modnet", sizeMb: 25, license: "Apache-2.0", description: "Portrait matting — people only, soft hair edges." },
   { id: "slimsam", task: "segmentation", repo: "Xenova/slimsam-77-uniform", sizeMb: 30, license: "Apache-2.0", description: "Segment Anything (light): select an object from points or a box." },
   { id: "sam-base", task: "segmentation", repo: "Xenova/sam-vit-base", sizeMb: 100, license: "Apache-2.0", description: "Segment Anything (base): more precise selections, slower." },

@@ -181,8 +181,10 @@ export function validateFilter(c: Collector, f: unknown, path: string) {
   if (typeof f.type !== "string") return c.error("missing", `${path}.type`, `${path}.type (a filter id) is required.`, `Filters: ${listOptions(CATALOG.filters.map((x) => x.id))}.`);
   const def = filterDef(f.type);
   if (!def) return c.error("unknown-filter", `${path}.type`, `Unknown filter "${f.type}".`, `${didYouMean(f.type, CATALOG.filters.map((x) => x.id))}Filters: ${listOptions(CATALOG.filters.map((x) => x.id))} (catalog_get section "filters").`);
-  for (const p of COMMON_FILTER_PARAMS) if (f[p.name] !== undefined) param(c, p, f[p.name], `${path}.${p.name}`);
-  params(c, f, def.params, path, `filter "${def.id}"`, ["type", ...COMMON_FILTER_PARAMS.map((p) => p.name)]);
+  // A filter's own param shadows a common one ("amount" is the strength of sharpen / clarity / noise / vignette, not the mix).
+  const common = COMMON_FILTER_PARAMS.filter((p) => !def.params.some((d) => d.name === p.name));
+  for (const p of common) if (f[p.name] !== undefined) param(c, p, f[p.name], `${path}.${p.name}`);
+  params(c, f, def.params, path, `filter "${def.id}"`, ["type", ...common.map((p) => p.name)]);
   if (def.id === "look" && f.look === undefined) c.error("missing", `${path}.look`, `A "look" filter needs a look id.`, `Looks: ${listOptions(CATALOG.looks.map((l) => l.id))}.`);
 }
 
@@ -409,7 +411,8 @@ export const errorsOf = (issues: Issue[]) => issues.filter((i) => i.severity ===
 
 // Structural defaults only (never invents content).
 export function normalizeDoc(doc: PhotoDoc): PhotoDoc {
-  return { ...doc, version: doc.version ?? DOC_VERSION, layers: Array.isArray(doc.layers) ? doc.layers : [] };
+  // Only a missing layer list defaults to []: a wrong value stays so validation reports it (never silently drops layers).
+  return { ...doc, version: doc.version ?? DOC_VERSION, layers: doc.layers === undefined || doc.layers === null ? [] : doc.layers };
 }
 
 export function defaultDoc(opts: { id?: string; title?: string; width?: number; height?: number; background?: PhotoDoc["canvas"]["background"] } = {}): PhotoDoc {

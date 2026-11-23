@@ -44,7 +44,12 @@ async function writeMask(ctx: ToolContext, doc: PhotoDoc, id: string, img: Encod
   const layer = layerOf(doc, id);
   const entry = await addAsset(ctx.fs, { name: `${id}-${opts.label}.png`, bytes: img.bytes, kind: "mask", source: opts.source });
   const mask = { src: entry.path, ...(opts.invert ? { invert: true } : {}), ...(opts.feather ? { feather: opts.feather } : {}) };
-  const r = await patchDoc(ctx.fs, [{ op: "setMask", id, mask }, ...(opts.extraOps ?? [])]);
+  // A refused / failing patch must not leave an orphan mask file behind.
+  const r = await patchDoc(ctx.fs, [{ op: "setMask", id, mask }, ...(opts.extraOps ?? [])]).catch(async (e) => {
+    await removeGenerated(ctx.fs, entry.path);
+    throw e;
+  });
+  if (!r.applied) await removeGenerated(ctx.fs, entry.path);
   // Drop the previous generated mask if nothing uses it any more.
   const prev = layer.mask && isImageMask(layer.mask) ? layer.mask.src : null;
   if (r.applied && prev && prev !== entry.path && prev.startsWith("assets/masks/")) {
@@ -71,8 +76,6 @@ async function removeGenerated(fs: ProjectFs, path: string) {
   const { removeAsset } = await import("../ops/assets");
   await removeAsset(fs, path, { force: true }).catch(() => undefined);
 }
-
-let previewCounter = 0;
 
 export const IMAGE_TOOLS: AiTool[] = [
   {
@@ -102,14 +105,13 @@ export const IMAGE_TOOLS: AiTool[] = [
       const only = optStr(input, "layer");
       if (only) layerOf(doc, only);
       const opts = { maxWidth: zoom ? undefined : maxWidth, maxHeight: zoom ? undefined : Math.max(maxWidth, 1000), only: only ? [only] : undefined, format: "png" as const };
-      const n = ++previewCounter % 4;
       const after = await e.render(doc, opts);
-      const path = `renders/preview-${n}.png`;
+      const path = "renders/preview.png";
       await ctx.fs.writeBytes(path, after.bytes);
       const images = [path];
       if (bool(input, "compare")) {
         const before = await e.render(disableEdits(doc), opts);
-        const bp = `renders/preview-${n}-before.png`;
+        const bp = "renders/preview-before.png";
         await ctx.fs.writeBytes(bp, before.bytes);
         images.unshift(bp);
       }
@@ -190,7 +192,7 @@ export const IMAGE_TOOLS: AiTool[] = [
   },
   {
     name: "remove_background",
-    description: `Remove the background of a photo layer with local AI (no upload): writes a mask PNG to assets/masks/ and sets it as the layer's mask — non-destructive (mask_set null restores). Optional background: a colour / gradient placed under the cut-out (adds a fill layer), shadow: true adds a soft drop shadow. Models: ${MODELS.filter((m) => m.task === "background-removal").map((m) => `${m.id} (${m.description})`).join("; ")}. First use downloads the model once (~25–45 MB).`,
+    description: `Remove the background of a photo layer with local AI (no upload): writes a mask PNG to assets/masks/ and sets it as the layer's mask — non-destructive (mask_set null restores). Optional background: a colour / gradient placed under the cut-out (adds a fill layer), shadow: true adds a soft drop shadow. Models: ${MODELS.filter((m) => m.task === "background-removal").map((m) => `${m.id} (${m.description})`).join("; ")}. First use downloads the model once (25–170 MB, cached).`,
     inputSchema: {
       type: "object",
       properties: {
