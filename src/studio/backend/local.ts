@@ -18,7 +18,8 @@ import { pageEngineHost } from "./pageEngine";
 import { ToolCallError, type AiProgress, type Backend, type CreateOptions, type ProjectRef, type ToolInfo } from "./types";
 
 // Static hosting: library/ and ort/ sit next to the Studio (vite.config.ts
-// copies them; the dev server serves them from the repo).
+// copies them; the dev server serves them from the repo). A host serving the
+// npm package's dist/ (no dist/studio/ort) sets ortBase "../engine/ort/".
 const LIBRARY_BASE = "./library/";
 const ORT_BASE = "./ort/";
 const TEMPLATES_BASE = "./templates/";
@@ -55,8 +56,10 @@ export class LocalBackend implements Backend {
   private uploads = new Map<string, Uint8Array>();
   private progress = new Set<(p: AiProgress) => void>();
   private changeListeners = new Set<(paths: string[]) => void>();
+  private ortBase = ORT_BASE;
 
-  async init(): Promise<void> {
+  async init(opts: { ortBase?: string } = {}): Promise<void> {
+    if (opts.ortBase) this.ortBase = opts.ortBase.endsWith("/") ? opts.ortBase : `${opts.ortBase}/`;
     const bytes = await fetchBytes(`${LIBRARY_BASE}index.json`);
     try {
       if (bytes) this.libraryIndex = JSON.parse(new TextDecoder().decode(bytes)) as LibraryIndex;
@@ -118,7 +121,7 @@ export class LocalBackend implements Backend {
       library: this.libraryIndex,
       resolve: (path) => FS_SCHEME + encodeURIComponent(path),
       fetchImpl: this.fetchFile as typeof fetch,
-      ai: { wasmPaths: abs(ORT_BASE), onProgress: (p) => this.progress.forEach((l) => l(p)) },
+      ai: { wasmPaths: abs(this.ortBase), onProgress: (p) => this.progress.forEach((l) => l(p)) },
     };
   }
 
@@ -301,6 +304,17 @@ export class LocalBackend implements Backend {
     this.title = p.title;
     this.thumb = p.thumb;
     this.attach(new PersistedFs(p.id, p.files, () => ({ title: this.title, thumb: this.thumb })));
+  }
+
+  // A project made elsewhere (an agent, the CLI): its files as a path → bytes
+  // map. An id already stored opens that copy, with the person's edits.
+  async importProject(id: string, title: string, files: Record<string, Uint8Array>): Promise<void> {
+    if (await projectsDb.get(id)) return this.open(id);
+    this.title = title;
+    this.thumb = undefined;
+    const fs = new PersistedFs(id, files, () => ({ title: this.title, thumb: this.thumb }));
+    await fs.save();
+    this.attach(fs);
   }
 
   async remove(id: string): Promise<void> {

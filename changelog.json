@@ -1,6 +1,16 @@
 {
   "versions": [
     {
+      "version": "0.1.2",
+      "date": "2026-11-24",
+      "breaking": false,
+      "changes": [
+        "Studio: #import=<ref> opens a project bundle or an image from a link in local mode (static hosting), with config.js (importUrl, sessionFromReferrer, ortBase) for agent platforms that serve the Studio next to their chat.",
+        "The npm package's dist/ is a static site as it is: dist/index.html opens the Studio, which can load ONNX Runtime from engine/ort/."
+      ],
+      "actions": []
+    },
+    {
       "version": "0.1.1",
       "date": "2026-11-24",
       "breaking": false,

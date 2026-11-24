@@ -35,6 +35,20 @@ The assistant panel runs a tool-use loop with Claude over the same tools (includ
 
 Background removal and Segment Anything masks run in the page (ONNX models through transformers.js, WebAssembly). With `agentphoto studio`, models come from the local cache (`~/.cache/agentphoto/models`) through the server's `/__models/` proxy and are downloaded from Hugging Face only the first time: the Studio shows a one-time download notice (model, size, licence) only for a model the cache does not hold yet (`agentphoto models list` shows what is cached; `models pull` fetches one ahead of time).
 
+## Static hosting and links from an agent
+
+The npm package's `dist/` is a static site as it is: `dist/index.html` opens `studio/index.html`, and ONNX Runtime is in `engine/ort/`. Served that way (no CLI), the Studio runs in local mode: projects in the browser, engine in the page. An agent platform that serves it next to its chat can give links that open the agent's work in it:
+
+- `studio/index.html#import=<ref>` imports `<ref>` as a new browser project, then replaces the link with `?project=<id>` (a reload does not import twice; the same bundle opens the same stored project, with the person's edits). `<ref>` is an image or a **project bundle**, on the page's own origin.
+- A project bundle is one JSON file: `{"format": "agentphoto-project", "version": 1, "title": "Lake", "files": {"photo.json": "<base64>", "agentphoto.json": "<base64>", "assets/images/lake.jpg": "<base64>", …}}`, the project folder without `renders/` and `dist/`.
+- `config.js` (next to `index.html`, or at the root of the hosted `dist/`) sets `window.__AGENTPHOTO_CONFIG__`:
+  - `importUrl`: how a relative `<ref>` becomes a URL, e.g. `"/api/v1/sessions/{session}/workspace/raw?path={path}"`; `{path}` is URL-encoded;
+  - `sessionFromReferrer`: a regular expression with one group that finds `{session}` in the page the link was clicked on (e.g. `"/s/([^/?#]+)"`); `#session=<id>` in the link overrides it;
+  - `ortBase`: where ONNX Runtime is, relative to the Studio (`"../engine/ort/"` for a hosted `dist/`).
+- The download uses the person's own session (same origin, cookies); a URL on another origin is refused. Nothing goes back to the platform: the person exports from the Studio.
+
+The page needs `script-src 'self' 'wasm-unsafe-eval'`, `worker-src 'self' blob:`, `style-src 'self' 'unsafe-inline'`, `img-src 'self' data: blob:` and, for the AI tools, `connect-src` to `https://huggingface.co` and its CDN (`*.huggingface.co`, `*.hf.co`).
+
 ## Shortcuts
 
 Tool keys are shown in the tool rail (move `V`, marquee `M`, lasso `L`, magic wand `W`, quick AI select `Q`, crop `C`, brush `B`, eraser `E`, clone `S`, text `T`, shapes `U`, hand `H`, zoom `Z`, eyedropper `I`); the shortcuts dialog in the Studio lists them all and is the reference.

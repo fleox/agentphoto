@@ -6,6 +6,13 @@ export const en = {
     loadFailed: "The project could not be opened",
     back: "Back to the start screen",
   },
+  linkImport: {
+    noSession: "Open this link from the conversation it was given in: it does not say which conversation holds the file.",
+    badLink: "This link cannot be opened here.",
+    fetch: "The file of this link could not be downloaded (removed, or not shared with you).",
+    badBundle: "The file of this link is not a valid AgentPhoto project.",
+    unsupported: "The file of this link is neither an AgentPhoto project nor an image.",
+  },
   ui: {
     close: "Close",
     cancel: "Cancel",

@@ -8,6 +8,13 @@ export const fr: Messages = {
     loadFailed: "Impossible d'ouvrir le projet",
     back: "Retour à l'accueil",
   },
+  linkImport: {
+    noSession: "Ouvrez ce lien depuis la conversation où il a été donné : il ne dit pas quelle conversation contient le fichier.",
+    badLink: "Ce lien ne peut pas être ouvert ici.",
+    fetch: "Le fichier de ce lien n'a pas pu être téléchargé (supprimé, ou non partagé avec vous).",
+    badBundle: "Le fichier de ce lien n'est pas un projet AgentPhoto valide.",
+    unsupported: "Le fichier de ce lien n'est ni un projet AgentPhoto ni une image.",
+  },
   ui: {
     close: "Fermer",
     cancel: "Annuler",

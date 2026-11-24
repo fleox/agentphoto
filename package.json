@@ -14,6 +14,7 @@
     "dist/agent",
     "dist/engine",
     "dist/studio",
+    "dist/index.html",
     "library",
     "templates",
     "plugin",

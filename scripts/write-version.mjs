@@ -32,4 +32,11 @@ writeFileSync(join(root, "dist", "version.json"), JSON.stringify(info, null, 2) 
 // The npm bin entry; executable so `./dist/agent/agentphoto.mjs` works in a clone.
 const bin = join(root, "dist", "agent", "agentphoto.mjs");
 if (existsSync(bin)) chmodSync(bin, 0o755);
+// Hosting the package's dist/ as a static site (the Studio in studio/index.html, ONNX
+// Runtime in engine/ort/, docs/studio.md "Static hosting"): its root opens
+// the Studio. A meta refresh, no script, so a strict CSP allows it.
+writeFileSync(
+  join(root, "dist", "index.html"),
+  '<!doctype html>\n<meta charset="utf-8">\n<meta http-equiv="refresh" content="0; url=studio/index.html">\n<title>AgentPhoto Studio</title>\n<a href="studio/index.html">AgentPhoto Studio</a>\n',
+);
 console.log(`[version] dist/version.json → ${info.version}`);
