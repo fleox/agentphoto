@@ -1,6 +1,24 @@
 {
   "versions": [
     {
+      "version": "0.1.1",
+      "date": "2026-11-24",
+      "breaking": false,
+      "changes": [
+        "Blur on text and shape layers now spreads beyond the layer's box: soft floor shadows (product-white template) and glows.",
+        "New patch op fitLayer, and remove-bg --fit / --anchor: place a cut-out subject in a box; the product-white template does it automatically on the first cut-out.",
+        "Radial gradients are elliptical on non-square boxes (square boxes unchanged).",
+        "Export notes about cover crops judge text by its visible glyphs, not its box.",
+        "layer list shows the filters of adjustment layers; CLI hints show project paths as you typed them; --set text=2026 keeps the text a string.",
+        "Studio: no download dialog for AI models the CLI already cached, whole template thumbnails on the start screen, clearer AI buttons in the mask section.",
+        "Templates copy only the files their document uses.",
+        "Docs: exact wording on what leaves your computer; new README with a demo film, real Claude Code sessions and terminal demos; Hermes Agent skills; CI and release workflows."
+      ],
+      "actions": [
+        "Claude Code: /plugin marketplace update agentphoto, then /reload-plugins. MCP configs: update the pinned version in args."
+      ]
+    },
+    {
       "version": "0.1.0",
       "date": "2026-11-23",
       "breaking": false,
