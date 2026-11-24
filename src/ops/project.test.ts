@@ -68,7 +68,9 @@ describe("createProject", () => {
     expect(r.doc).toMatchObject({ id: "post", title: "Post", canvas: { width: 1080, height: 1080 } });
     expect(r.doc.layers.map((l) => l.id)).toEqual(["slot", "title"]);
     expect((r.doc.layers[0] as ImageLayer).src).toBe("assets/images/me.png");
-    expect(await fs.exists("assets/images/placeholder.png")).toBe(true);
+    // The sample image is no longer used: not copied.
+    expect(await fs.exists("assets/images/placeholder.png")).toBe(false);
+    expect(r.files).not.toContain("assets/images/placeholder.png");
     expect(await fs.exists("preview.jpg")).toBe(false);
     expect(await fs.exists("template.json")).toBe(false);
     // No slot: the photo goes at the bottom, covering the canvas.
@@ -81,6 +83,21 @@ describe("createProject", () => {
     await expect(createProject(new MemoryFs(), { name: "a", template: "t", templateFiles: { "photo.json": "{ nope" } })).rejects.toMatchObject({ code: "invalid" });
     const r3 = await instantiateTemplate(new MemoryFs(), "square-post", templateFiles("slot"), { name: "Via helper" });
     expect(r3.manifest).toMatchObject({ name: "via-helper", template: "square-post" });
+    // Without a photo the template keeps its sample image.
+    expect(r3.files).toContain("assets/images/placeholder.png");
+  });
+
+  it("does not copy the slot's cut-out mask once the user's photo replaces the sample", async () => {
+    const doc = { ...TEMPLATE_DOC, layers: [{ ...TEMPLATE_DOC.layers[0], src: "library:product", mask: { src: "assets/masks/photo-cutout.png" } }, { id: "badge", type: "image", src: "assets/images/badge.png", x: 0, y: 0, width: 10, height: 10 }] };
+    const files = { "photo.json": JSON.stringify(doc), "template.json": JSON.stringify({ id: "t", slot: "slot" }), "assets/masks/photo-cutout.png": tinyPng(4, 4), "assets/images/badge.png": tinyPng(4, 4) };
+    const fs = new MemoryFs();
+    const r = await createProject(fs, { name: "p", template: "t", templateFiles: files, image: { name: "mug.png", bytes: tinyPng(8, 8) } });
+    expect(await fs.exists("assets/masks/photo-cutout.png")).toBe(false);
+    expect(await fs.exists("assets/images/badge.png")).toBe(true);
+    expect(r.files).toEqual(["agentphoto.json", "assets/images/badge.png", "assets/images/mug.png", "assets/manifest.json", "photo.json"]);
+    const sample = new MemoryFs();
+    await createProject(sample, { name: "p", template: "t", templateFiles: files });
+    expect(await sample.exists("assets/masks/photo-cutout.png")).toBe(true);
   });
 
   it("refuses to overwrite a project unless force", async () => {
@@ -194,5 +211,8 @@ describe("templates", () => {
     expect(parseTemplateInfo({}, "x")).toEqual({ id: "x", title: "x", description: "", category: "other", tags: [], width: 1200, height: 630 });
     expect(parseTemplateInfo({ id: "y", tags: [1, "a"], slot: "photo", width: 10, height: "20" }, "x")).toMatchObject({ id: "y", tags: ["1", "a"], slot: "photo", width: 10, height: 630 });
     expect(parseTemplateInfo(null, "z").id).toBe("z");
+    expect(parseTemplateInfo({ subjectArea: { x: 1, y: 2, width: 30, height: 40, anchor: "bottom" } }, "a").subjectArea).toEqual({ x: 1, y: 2, width: 30, height: 40, anchor: "bottom" });
+    expect(parseTemplateInfo({ subjectArea: { x: 1, y: 2, width: 30, height: 40, anchor: "nope" } }, "a").subjectArea).toEqual({ x: 1, y: 2, width: 30, height: 40 });
+    expect(parseTemplateInfo({ subjectArea: { x: 1, y: 2, width: 0, height: 40 } }, "a")).not.toHaveProperty("subjectArea");
   });
 });

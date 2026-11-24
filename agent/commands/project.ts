@@ -3,7 +3,7 @@ import { basename, resolve } from "node:path";
 import { NodeFs } from "../nodeFs";
 import { CliError, printResult } from "../output";
 import type { Command } from "./types";
-import { absPath, boolOpt, numOpt, paintValue, positional, PROJECT_OPTION, projectFs, strOpt, table, tool } from "./util";
+import { absPath, boolOpt, numOpt, paintValue, positional, PROJECT_OPTION, projectFs, shownDir, strOpt, table, tool } from "./util";
 
 interface Created {
   manifest: { name: string; title?: string };
@@ -29,7 +29,8 @@ export const newCommand: Command = {
     { name: "force", type: "boolean", description: "Overwrite an existing project in the folder." },
   ],
   async run({ io, options, positionals }) {
-    const dir = resolve(positional(positionals, 0, "project folder", "new <dir> [--image <photo>]"));
+    const typed = positional(positionals, 0, "project folder", "new <dir> [--image <photo>]");
+    const dir = resolve(typed);
     const force = boolOpt(options, "force");
     if (!force && existsSync(resolve(dir, "photo.json")))
       throw new CliError("conflict", `${dir} is already an AgentPhoto project (photo.json exists).`, "Work on it with `--project <dir>` (`agentphoto info --project …`), pick another folder, or pass --force to overwrite it.");
@@ -54,8 +55,8 @@ export const newCommand: Command = {
     const { canvas, layers } = r.summary;
     printResult(io, { dir, manifest: r.manifest, canvas, layers, files, issues: r.issues }, () =>
       [
-        `Created ${dir} (${canvas.width}×${canvas.height}${strOpt(options, "template") ? `, template ${strOpt(options, "template")}` : ""}; layers: ${layers.map((l) => l.id).join(", ") || "none"}).`,
-        `Next: agentphoto render --project ${dir}  ·  agentphoto analyze --project ${dir}`,
+        `Created ${shownDir(dir, typed)} (${canvas.width}×${canvas.height}${strOpt(options, "template") ? `, template ${strOpt(options, "template")}` : ""}; layers: ${layers.map((l) => l.id).join(", ") || "none"}).`,
+        `Next: agentphoto render --project ${shownDir(dir, typed)}  ·  agentphoto analyze --project ${shownDir(dir, typed)}`,
       ].join("\n"),
     );
   },

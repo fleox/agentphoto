@@ -3,7 +3,17 @@
 import type { Issue } from "../core/types";
 import { OpsError } from "../ops/context";
 import type { DocPlan } from "../ops/doc";
-import type { JsonSchema } from "./types";
+import type { JsonSchema, ToolContext } from "./types";
+
+// Reads `library:<id>` sources for ops that need image sizes (geometry ops).
+export function libraryReader(ctx: ToolContext): ((id: string) => Promise<Uint8Array | null>) | undefined {
+  const lib = ctx.host?.library;
+  if (!lib) return undefined;
+  return async (id) => {
+    const a = lib.index.assets.find((x) => x.id === id);
+    return a?.path ? lib.read(a.path) : null;
+  };
+}
 
 export function str(input: Record<string, unknown>, key: string, required = true): string {
   const v = input[key];

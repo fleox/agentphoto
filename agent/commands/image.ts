@@ -1,6 +1,6 @@
 import { CliError, printResult } from "../output";
 import type { Command } from "./types";
-import { absPath, boolOpt, confirmOrPlan, jsonOpt, numOpt, paintValue, positional, PROJECT_OPTION, projectFs, strOpt, tool, usage, YES_OPTION, type MutationResult } from "./util";
+import { absPath, boolOpt, confirmOrPlan, jsonOpt, numOpt, paintValue, positional, PROJECT_OPTION, projectFs, shownDir, strOpt, tool, usage, YES_OPTION, type MutationResult } from "./util";
 
 // The pixel commands (headless Chrome engine): remove-bg, analyze, render,
 // export — plus check. All of them are AI tools (src/ai/imageTools.ts).
@@ -9,7 +9,7 @@ const log = (m: string) => void process.stderr.write(`${m}\n`);
 
 export const removeBgCommand: Command = {
   name: "remove-bg",
-  usage: "remove-bg <layer> [--model rmbg-1.4|modnet] [--background <paint>] [--shadow] [--feather <px>] [--threshold <0-255>]",
+  usage: "remove-bg <layer> [--model rmbg-1.4|modnet] [--background <paint>] [--shadow] [--feather <px>] [--threshold <0-255>] [--fit x,y,w,h|none] [--anchor center|bottom|…]",
   summary: "Remove the background of a photo layer with local AI (nothing is uploaded; the model downloads once): writes a mask to assets/masks/ and sets it on the layer — non-destructive (`mask clear` restores). --background adds a colour / gradient under the cut-out, --shadow a soft drop shadow.",
   writes: true,
   options: [
@@ -19,6 +19,8 @@ export const removeBgCommand: Command = {
     { name: "shadow", type: "boolean", description: "Add a soft drop shadow under the subject." },
     { name: "feather", type: "string", description: "Soften the edge, px." },
     { name: "threshold", type: "string", description: "Hard edge: keep pixels with confidence ≥ threshold (0..255). Default: soft alpha (best for hair)." },
+    { name: "fit", type: "string", description: 'Scale and move the layer so the subject fits this canvas box "x,y,width,height"; "none" leaves it in place. Default: the template\'s subject area on its photo slot (first cut-out after `new --template … --image`).' },
+    { name: "anchor", type: "string", description: "With --fit: where the subject sits in the box — center (default), bottom (on a floor line), top, left, right, top-left…" },
   ],
   async run({ io, options, positionals }) {
     const id = positional(positionals, 0, "layer id", "remove-bg <layer>");
@@ -29,9 +31,18 @@ export const removeBgCommand: Command = {
     if (boolOpt(options, "shadow")) input.shadow = true;
     if (numOpt(options, "feather") !== undefined) input.feather = numOpt(options, "feather");
     if (numOpt(options, "threshold") !== undefined) input.threshold = numOpt(options, "threshold");
-    const r = await tool<MutationResult & { mask: string; model: string; size: string }>(fs, "remove_background", input);
+    const fit = strOpt(options, "fit");
+    if (fit !== undefined) {
+      if (fit === "none" || fit === "false") input.fit = false;
+      else {
+        const v = fit.split(",").map((x) => Number(x.trim()));
+        if (v.length !== 4 || !v.every(Number.isFinite)) usage(`Invalid --fit "${fit}".`, 'Pass the canvas box "x,y,width,height" (e.g. --fit 500,400,1000,850 --anchor bottom) or "none".');
+        input.fit = { x: v[0], y: v[1], width: v[2], height: v[3], ...(strOpt(options, "anchor") ? { anchor: strOpt(options, "anchor") } : {}) };
+      }
+    } else if (strOpt(options, "anchor")) usage("--anchor needs --fit.", "e.g. remove-bg photo --fit 500,400,1000,850 --anchor bottom");
+    const r = await tool<MutationResult & { mask: string; model: string; size: string; fitted?: { box: { x: number; y: number; width: number; height: number }; anchor: string } }>(fs, "remove_background", input);
     if (r.status === "refused") throw new CliError("validation", "The cut-out could not be applied.", "See details.issues.", 2, { issues: r.issues });
-    printResult(io, { ...r, maskFile: absPath(fs, r.mask) }, () => `Background removed from "${id}" (${r.model}): mask ${r.mask} (${r.size}). ${r.plan.summary}\nLook at it: agentphoto render --project ${fs.root}`);
+    printResult(io, { ...r, maskFile: absPath(fs, r.mask) }, () => `Background removed from "${id}" (${r.model}): mask ${r.mask} (${r.size}). ${r.plan.summary}${r.fitted ? `\nSubject fitted into ${r.fitted.box.x},${r.fitted.box.y},${r.fitted.box.width},${r.fitted.box.height} (${r.fitted.anchor}); --fit none keeps the layer in place.` : ""}\nLook at it: agentphoto render --project ${shownDir(fs.root, strOpt(options, "project"))}`);
   },
 };
 

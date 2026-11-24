@@ -25,11 +25,11 @@
       "y": 1240,
       "width": 800,
       "height": 70,
-      "fill": "rgba(0,0,0,0.28)",
+      "fill": "rgba(0,0,0,0.34)",
       "filters": [
         {
           "type": "blur",
-          "radius": 40
+          "radius": 30
         }
       ]
     },

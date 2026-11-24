@@ -9,7 +9,7 @@ import { didYouMean } from "../core/suggest";
 import { hasBox, isShapeMask, type Filter, type Issue, type Layer, type Mask, type PhotoDoc } from "../core/types";
 import { normalizeDoc, validateDoc } from "../core/validate";
 import { hasErrors, OpsError, readJson } from "./context";
-import { ANCHORS, cropDoc, flipDoc, resizeCanvasDoc, rotateDoc, scaleDoc, type Anchor, type SizeMap } from "./geometry";
+import { ANCHORS, cropDoc, fitLayerDoc, flipDoc, resizeCanvasDoc, rotateDoc, scaleDoc, type Anchor, type Rect, type SizeMap } from "./geometry";
 
 import { allLayerIds, findLayer, flattenLayers, isDescendant, layerDetail, maskKind, walkLayers, type FlatLayer } from "./tree";
 
@@ -220,12 +220,13 @@ export type PatchOp =
   | { op: "resizeCanvas"; width: number; height: number; anchor?: Anchor }
   | { op: "resizeImage"; width?: number; height?: number; scale?: number }
   | { op: "rotateCanvas"; angle: number }
-  | { op: "flipCanvas"; axis: "horizontal" | "vertical" };
+  | { op: "flipCanvas"; axis: "horizontal" | "vertical" }
+  | { op: "fitLayer"; id: string; box: Rect; subject?: Rect | null; anchor?: Anchor };
 
-export const PATCH_OPS = ["set", "merge", "remove", "addLayer", "updateLayer", "removeLayer", "moveLayer", "duplicateLayer", "groupLayers", "ungroup", "addFilter", "updateFilter", "removeFilter", "setMask", "crop", "resizeCanvas", "resizeImage", "rotateCanvas", "flipCanvas"] as const;
+export const PATCH_OPS = ["set", "merge", "remove", "addLayer", "updateLayer", "removeLayer", "moveLayer", "duplicateLayer", "groupLayers", "ungroup", "addFilter", "updateFilter", "removeFilter", "setMask", "crop", "resizeCanvas", "resizeImage", "rotateCanvas", "flipCanvas", "fitLayer"] as const;
 
 // Ops that need the natural size of image sources (geometry).
-export const GEOMETRY_OPS = new Set(["resizeImage", "rotateCanvas", "flipCanvas"]);
+export const GEOMETRY_OPS = new Set(["resizeImage", "rotateCanvas", "flipCanvas", "fitLayer"]);
 
 const isObj = (v: unknown): v is Record<string, unknown> => !!v && typeof v === "object" && !Array.isArray(v);
 
@@ -449,6 +450,10 @@ export function applyPatchOps(doc: PhotoDoc, ops: PatchOp[], sizes: SizeMap = {}
           break;
         case "flipCanvas":
           d = flipDoc(d, op.axis, sizes);
+          break;
+        case "fitLayer":
+          need(d, op.id, i);
+          d = fitLayerDoc(d, op.id, op.box, { subject: op.subject, anchor: op.anchor, sizes });
           break;
         default:
           throw opError(i, "invalid", `Unknown op "${(op as { op: string }).op}".`, `${didYouMean((op as { op: string }).op, PATCH_OPS)}Ops: ${PATCH_OPS.join(", ")}.`);

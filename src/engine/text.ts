@@ -88,6 +88,40 @@ export function layoutText(l: TextLayer, family: string, scale = 1): TextLayout 
   };
 }
 
+// What a text layer actually paints, in layer px relative to its box's
+// top-left corner (scale 1): the lines placed by align / valign (font ascent
+// + descent per line) and the background with its padding. Empty text with no
+// background → null. Glyph overhang (italics) is not measured.
+export function textInkBox(l: TextLayer, lay: TextLayout): { x: number; y: number; width: number; height: number } | null {
+  let x0 = Infinity;
+  let y0 = Infinity;
+  let x1 = -Infinity;
+  let y1 = -Infinity;
+  const add = (ax: number, ay: number, bx: number, by: number) => {
+    x0 = Math.min(x0, ax);
+    y0 = Math.min(y0, ay);
+    x1 = Math.max(x1, bx);
+    y1 = Math.max(y1, by);
+  };
+  const w = lay.width;
+  const h = lay.height;
+  if (l.background) {
+    const [px, py] = backgroundPad(l);
+    add(-px, -py, w + px, h + py);
+  }
+  const valign = l.valign ?? "top";
+  const top = valign === "middle" ? (h - lay.textHeight) / 2 : valign === "bottom" ? h - lay.textHeight : 0;
+  const align = l.align ?? "left";
+  lay.lines.forEach((line, i) => {
+    if (!line.text || line.width <= 0) return;
+    const lineTop = top + i * lay.lineHeight + (lay.lineHeight - (lay.ascent + lay.descent)) / 2;
+    const x = align === "center" ? (w - line.width) / 2 : align === "right" ? w - line.width : 0;
+    add(x, lineTop, x + line.width, lineTop + lay.ascent + lay.descent);
+  });
+  if (!Number.isFinite(x0)) return null;
+  return { x: x0, y: y0, width: x1 - x0, height: y1 - y0 };
+}
+
 export function backgroundPad(l: TextLayer): [number, number] {
   const p = l.background?.padding ?? 0;
   return Array.isArray(p) ? [p[0], p[1]] : [p, p];

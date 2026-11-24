@@ -8,7 +8,7 @@ import { didYouMean } from "../core/suggest";
 import { isImageMask, type AssetManifest, type ImageLayer, type Issue, type Paint, type PhotoDoc, type ProjectManifest } from "../core/types";
 import { defaultDoc, MAX_CANVAS, normalizeDoc, validateDoc } from "../core/validate";
 import { AGENTPHOTO_VERSION, hasErrors, nowIso, OpsError, readJson, readJsonOr, validationError, writeJson } from "./context";
-import { findLayer } from "./tree";
+import { findLayer, referencedFiles } from "./tree";
 
 export const MANIFEST_FILE = "agentphoto.json";
 export const DOC_FILE = "photo.json";
@@ -106,12 +106,6 @@ export async function createProject(fs: ProjectFs, opts: CreateProjectOptions): 
 
   if (opts.templateFiles) {
     const tf = opts.templateFiles;
-    for (const [path, content] of Object.entries(tf)) {
-      if (path === DOC_FILE || path === MANIFEST_FILE || path === "template.json" || path === "preview.png" || path === "preview.jpg") continue;
-      if (typeof content === "string") await fs.writeText(path, content);
-      else await fs.writeBytes(path, content);
-      files.push(path);
-    }
     doc = templateDoc!;
     try {
       templateSlot = tf["template.json"] ? (JSON.parse(asText(tf["template.json"])) as { slot?: string }).slot : undefined;
@@ -131,6 +125,16 @@ export async function createProject(fs: ProjectFs, opts: CreateProjectOptions): 
         delete slot.layer.crop;
       }
       else doc.layers.unshift(photoLayer(photo, doc.canvas));
+    }
+    // Copy the template's files — but not assets no layer uses any more (the
+    // sample photo's cut-out mask once the user's photo took the slot).
+    const used = new Set(referencedFiles(doc).map((f) => f.path));
+    for (const [path, content] of Object.entries(tf)) {
+      if (path === DOC_FILE || path === MANIFEST_FILE || path === "template.json" || path === "preview.png" || path === "preview.jpg") continue;
+      if (path.startsWith("assets/") && path !== ASSET_MANIFEST_FILE && !used.has(path)) continue;
+      if (typeof content === "string") await fs.writeText(path, content);
+      else await fs.writeBytes(path, content);
+      files.push(path);
     }
   } else {
     const canvas = size ?? (photo ? { width: photo.width, height: photo.height } : { width: 1200, height: 630 });

@@ -60,7 +60,7 @@ Exactly the AI tool catalog of `src/ai/tools.ts` (`agentphoto tools list` prints
 | `project_create` | yes | Create the project: blank (size preset or width / height), from a photo (path or URL; it becomes the `photo` layer) and / or from a template |
 | `doc_summary` | | Compact outline: canvas, layers top → bottom (id, type, box, opacity, blend, mask, filters, effects) |
 | `doc_get` | | The full `photo.json` |
-| `doc_patch` | yes | Atomic, validated list of ops (`set`, `merge`, `remove`, `addLayer`, `updateLayer`, `removeLayer`, `moveLayer`, `duplicateLayer`, `groupLayers`, `ungroup`, `addFilter`, `updateFilter`, `removeFilter`, `setMask`, `crop`, `resizeCanvas`, `resizeImage`, `rotateCanvas`, `flipCanvas`), `dryRun` |
+| `doc_patch` | yes | Atomic, validated list of ops (`set`, `merge`, `remove`, `addLayer`, `updateLayer`, `removeLayer`, `moveLayer`, `duplicateLayer`, `groupLayers`, `ungroup`, `addFilter`, `updateFilter`, `removeFilter`, `setMask`, `crop`, `resizeCanvas`, `resizeImage`, `rotateCanvas`, `flipCanvas`, `fitLayer`), `dryRun` |
 | `doc_apply` | yes | Replace the whole document (validated) |
 | `doc_validate` | | Issues with JSON paths and hints |
 | `layer_list`, `layer_add`, `layer_update`, `layer_remove`, `layer_move` | add / update / remove / move | Layers |

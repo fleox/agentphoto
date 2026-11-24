@@ -11,8 +11,9 @@ import { OpsError } from "../ops/context";
 import { getDoc, patchDoc, type PatchOp } from "../ops/doc";
 import { FORMAT_EXT, IMAGE_FORMATS, planExport, type ExportRequest } from "../ops/export";
 import { allLayerIds, findLayer, referencedFiles } from "../ops/tree";
-import { layerBox } from "../ops/geometry";
-import { bool, mutationResult, num, optStr, str } from "./shared";
+import { ANCHORS, layerBox, type Anchor, type Rect } from "../ops/geometry";
+import { loadManifest } from "../ops/project";
+import { bool, libraryReader, mutationResult, num, optStr, str } from "./shared";
 import type { AiTool, EngineHost, EncodedImage, ToolContext } from "./types";
 
 function engine(ctx: ToolContext): EngineHost {
@@ -47,7 +48,7 @@ async function writeMask(ctx: ToolContext, doc: PhotoDoc, id: string, img: Encod
   const entry = await addAsset(ctx.fs, { name: `${target}-${opts.label}.png`, bytes: img.bytes, kind: "mask", source: opts.source });
   const mask = { src: entry.path, ...(opts.invert ? { invert: true } : {}), ...(opts.feather ? { feather: opts.feather } : {}) };
   // A refused / failing patch must not leave an orphan mask file behind.
-  const r = await patchDoc(ctx.fs, [...(opts.preOps ?? []), { op: "setMask", id: target, mask }, ...(opts.extraOps ?? [])]).catch(async (e) => {
+  const r = await patchDoc(ctx.fs, [...(opts.preOps ?? []), { op: "setMask", id: target, mask }, ...(opts.extraOps ?? [])], { readLibrary: libraryReader(ctx) }).catch(async (e) => {
     await removeGenerated(ctx.fs, entry.path);
     throw e;
   });
@@ -58,11 +59,18 @@ async function writeMask(ctx: ToolContext, doc: PhotoDoc, id: string, img: Encod
     const still = referencedFiles(r.doc).some((f) => f.path === prev);
     if (!still) await removeGenerated(ctx.fs, prev);
   }
-  return { mask: entry.path, size: `${img.width}×${img.height}`, ...(img.bbox !== undefined ? { subject: subjectBox(layer, img) } : {}), ...mutationResult(r, false) };
+  // The subject where it is now (after the ops: a fitLayer moves it).
+  const after = r.applied ? (findLayer(r.doc.layers, target)?.layer ?? layer) : layer;
+  return { mask: entry.path, size: `${img.width}×${img.height}`, ...(img.bbox !== undefined ? { subject: subjectBox(after, img) } : {}), ...mutationResult(r, false) };
 }
 
-// Text / shape layers that a cover-crop export cuts.
-function coverCuts(doc: PhotoDoc, job: { source: { x: number; y: number; width: number; height: number } }): string[] {
+type Box = { x: number; y: number; width: number; height: number };
+
+// Text / shape layers that a cover-crop export cuts. Text is judged by what it
+// paints (`measured[id].ink`: lines + background, real font metrics, from the
+// engine) rather than by its box — a centred title in a wide box is not cut
+// while its glyphs stay inside. Without measurements, the box (estimated).
+export function coverCuts(doc: PhotoDoc, job: { source: Box }, measured: Record<string, { ink?: Box } & Box> = {}): string[] {
   const { x, y, width, height } = job.source;
   if (x <= 0.5 && y <= 0.5 && width >= doc.canvas.width - 1 && height >= doc.canvas.height - 1) return [];
   const out: string[] = [];
@@ -71,7 +79,8 @@ function coverCuts(doc: PhotoDoc, job: { source: { x: number; y: number; width: 
       if (l.visible === false) continue;
       if (l.type === "group") visit(l.children ?? []);
       if (l.type !== "text" && l.type !== "shape") continue;
-      const b = layerBox(l);
+      const m = measured[l.id];
+      const b = l.type === "text" && m ? (m.ink ?? m) : layerBox(l);
       if (b && (b.x < x - 1 || b.y < y - 1 || b.x + b.width > x + width + 1 || b.y + b.height > y + height + 1)) out.push(l.id);
     }
   };
@@ -90,6 +99,29 @@ function subjectBox(layer: Layer, img: EncodedImage): { x: number; y: number; wi
   const by = l.flipY ? img.height - b.y - b.height : b.y;
   const r = (v: number) => Math.round(v);
   return { x: r((l.x ?? 0) + bx * kx), y: r((l.y ?? 0) + by * ky), width: r(b.width * kx), height: r(b.height * ky) };
+}
+
+// Where remove_background puts the subject: `fit` given ({ x, y, width,
+// height, anchor? }), `false` (leave the layer), or — by default — the
+// template's subjectArea when the layer is the slot of the project's template
+// and has no cut-out yet (first removal after `new --template … --image`).
+async function fitTarget(ctx: ToolContext, layer: Layer, fit: unknown): Promise<{ box: Rect; anchor: Anchor; from: string } | null> {
+  if (fit === false || fit === null) return null;
+  if (fit !== undefined) {
+    const f = fit as Record<string, unknown>;
+    if (!f || typeof f !== "object" || !["x", "y", "width", "height"].every((k) => typeof f[k] === "number" && Number.isFinite(f[k])) || !((f.width as number) >= 1 && (f.height as number) >= 1)) {
+      throw new OpsError("invalid", "fit must be { x, y, width, height, anchor? } in canvas px (or false).", 'e.g. fit: { "x": 500, "y": 400, "width": 1000, "height": 850, "anchor": "bottom" }.');
+    }
+    const anchor = (f.anchor ?? "center") as Anchor;
+    if (!ANCHORS.includes(anchor)) throw new OpsError("invalid", `Unknown anchor "${String(f.anchor)}".`, `Anchors: ${ANCHORS.join(", ")}.`);
+    return { box: { x: f.x as number, y: f.y as number, width: f.width as number, height: f.height as number }, anchor, from: "input" };
+  }
+  if (layer.mask && isImageMask(layer.mask)) return null;
+  const manifest = await loadManifest(ctx.fs).catch(() => null);
+  const t = manifest?.template ? ctx.host?.templates?.index.find((x) => x.id === manifest.template) : undefined;
+  if (!t?.subjectArea || t.slot !== layer.id) return null;
+  const { anchor, ...box } = t.subjectArea;
+  return { box, anchor: anchor ?? "center", from: `template ${t.id}` };
 }
 
 async function removeGenerated(fs: ProjectFs, path: string) {
@@ -184,6 +216,7 @@ export const IMAGE_TOOLS: AiTool[] = [
       };
       const reqs: ExportRequest[] = Array.isArray(input.variants) && input.variants.length ? (input.variants as ExportRequest[]).map((v) => ({ ...base, out: undefined, ...v })) : [base];
       const files: { path: string; format: string; width: number; height: number; kb: number; note?: string }[] = [];
+      let measured: Record<string, { ink?: Box } & Box> | undefined;
       for (const req of reqs) {
         const job = planExport(doc, req);
         const img = await e.exportImage(doc, job);
@@ -194,7 +227,9 @@ export const IMAGE_TOOLS: AiTool[] = [
           note = `${job.format.toUpperCase()} encoding is not supported by this browser: written as ${img.mime}.`;
         }
         await ctx.fs.writeBytes(path, img.bytes);
-        const cut = coverCuts(doc, job);
+        const crops = job.source.x > 0.5 || job.source.y > 0.5 || job.source.width < doc.canvas.width - 1 || job.source.height < doc.canvas.height - 1;
+        if (crops && measured === undefined) measured = (await e.layerBoxes?.(doc).catch(() => undefined)) ?? {};
+        const cut = coverCuts(doc, job, measured);
         if (cut.length) note = `${note ? `${note} ` : ""}fit "cover" crops the canvas to ${Math.round(job.source.width)}×${Math.round(job.source.height)} and cuts layer${cut.length > 1 ? "s" : ""} ${cut.join(", ")}: use fit "contain", or adapt the layout (doc_patch resizeCanvas / move layers) for this size.`;
         if (job.scale > 1.05) note = `${note ? `${note} ` : ""}Upscaled ×${Math.round(job.scale * 100) / 100} from the ${doc.canvas.width}×${doc.canvas.height} canvas: it may look soft.`;
         files.push({ path, format: img.mime === "image/jpeg" ? "jpeg" : (EXT[img.mime] ?? job.format), width: img.width, height: img.height, kb: Math.round(img.bytes.byteLength / 102.4) / 10, ...(note ? { note } : {}) });
@@ -227,6 +262,12 @@ export const IMAGE_TOOLS: AiTool[] = [
         threshold: { type: "integer", description: "Hard edge: keep pixels whose confidence ≥ threshold (0..255). Default: soft alpha (best for hair)." },
         background: { type: ["string", "object"], description: "Colour / gradient to put behind the subject (adds a fill layer below it)." },
         shadow: { type: "boolean", description: "Add a soft drop shadow under the subject." },
+        fit: {
+          type: ["object", "boolean"],
+          description:
+            'Scale and move the layer so the cut-out subject fits this canvas box: { x, y, width, height, anchor? } (anchor: center (default), bottom = standing on a floor line, top, left…). false leaves the layer where it is. Default: a template\'s subject area on its photo slot (first cut-out after a photo swap), otherwise nothing moves.',
+          additionalProperties: true,
+        },
       },
       required: ["id"],
     },
@@ -237,16 +278,23 @@ export const IMAGE_TOOLS: AiTool[] = [
       const doc = await getDoc(ctx.fs);
       const layer = layerOf(doc, id);
       if (layer.type !== "image") throw new OpsError("invalid", `"${id}" is a ${layer.type} layer: background removal works on image layers.`);
+      const fit = await fitTarget(ctx, layer, input.fit);
       const model = optStr(input, "model") ?? DEFAULT_MODELS["background-removal"];
       const img = await engine(ctx).backgroundMask(doc, id, { model, feather: num(input, "feather"), threshold: num(input, "threshold") });
       const extra: PatchOp[] = [];
+      const found = subjectBox(layer, img);
+      if (fit && found) extra.push({ op: "fitLayer", id, box: fit.box, subject: found, anchor: fit.anchor });
       if (input.background !== undefined && input.background !== null) {
         const bgId = uniqueId(`${id}-background`, allLayerIds(doc));
         extra.push({ op: "addLayer", layer: { id: bgId, type: "fill", name: "Background", fill: input.background as Paint }, below: id });
       }
       if (bool(input, "shadow")) extra.push({ op: "updateLayer", id, set: { effects: { dropShadow: { color: "#000000", opacity: 0.35, angle: 90, distance: 18, blur: 30 } } } });
       const r = await writeMask(ctx, doc, id, img, { label: "cutout", extraOps: extra, source: `remove_background:${model}` });
-      return { ...r, model, hint: "subject = the kept area in canvas px (null: nothing found). Center / scale the layer from it if needed, then render_preview (zoom on an edge: hair, fingers) to check; refine with mask_generate (points) or threshold / feather." };
+      const fitted = fit && found && (r as { applied?: boolean }).applied === true ? { box: fit.box, anchor: fit.anchor, from: fit.from } : undefined;
+      const place = fitted
+        ? `The layer was scaled and moved so the subject fits ${JSON.stringify(fitted.box)} (anchor ${fitted.anchor}, from the ${fitted.from}); fit: false keeps the layer where it was.`
+        : `To recentre / rescale it: doc_patch [{ "op": "fitLayer", "id": "${id}", "subject": <subject>, "box": { "x", "y", "width", "height" }, "anchor": "center" | "bottom" }] (or remove_background again with fit).`;
+      return { ...r, model, ...(fitted ? { fitted } : {}), hint: `subject = the kept area in canvas px (null: nothing found). ${place} Then render_preview (zoom on an edge: hair, fingers) to check; refine with mask_generate (points) or threshold / feather.` };
     },
   },
   {

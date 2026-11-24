@@ -74,7 +74,7 @@ One design in several sizes:
 agentphoto export --project post --variants '[{"preset":"og","format":"jpeg","quality":85},{"preset":"square","format":"webp","fit":"contain","background":"#0f172a"},{"preset":"story","format":"webp"}]'
 ```
 
-- Templates (`youtube-thumbnail`, `og-article`, `social-quote`, `story-promo`, `sale-banner`, `polaroid`, `avatar-pro`, `product-white`) put your photo into their `slot` layer with its framing, filters and effects.
+- Templates (`youtube-thumbnail`, `og-article`, `social-quote`, `story-promo`, `sale-banner`, `polaroid`, `avatar-pro`, `product-white`) put your photo into their `slot` layer with its framing, filters and effects (the sample photo's pre-computed cut-out is not copied: run `remove-bg photo` on yours; on `product-white` that first cut-out also scales the product onto the floor shadow).
 - Size presets: `og` 1200×630, `square` 1080×1080, `portrait` 1080×1350, `story` 1080×1920, `landscape` 1920×1080, `youtube` 1280×720, `twitter` 1600×900, `pinterest` 1000×1500, `banner` 1920×600, `linkedin-banner` 1584×396, `avatar` 800×800, `product` 2000×2000, `a4` 1240×1754.
 - `--fit cover` crops to the new aspect; `contain` pads. If a crop cuts text or a face, design that format separately.
 

@@ -14,10 +14,10 @@ import type { FillLayer, GroupLayer, ImageLayer, Layer, LayerEffects, Mask, Phot
 import { hasBox, isGradientMask, isImageMask, isShapeMask } from "../core/types";
 import { compositeOp, createCanvas, ctx2d, readPixels, writePixels, type AnyCanvas, type Ctx, type Drawable, type Surface } from "./canvas";
 import { applyEffects, effectsPad, hasEffects } from "./effects";
-import { runFilters } from "./filters";
+import { filtersPad, runFilters } from "./filters";
 import { blurAlpha } from "./filters/pixels";
 import { fillStyle, type Box } from "./paint";
-import { drawText, layoutText, roundRect } from "./text";
+import { drawText, layoutText, roundRect, textInkBox } from "./text";
 
 export interface AssetLoader {
   // Decoded image for a document src ("assets/photo.jpg", "library:portrait").
@@ -50,6 +50,9 @@ export interface LayerBoxInfo {
   width: number;
   height: number;
   rotation: number;
+  // Text layers: what is actually painted (lines + background), document px —
+  // smaller than the box when lines are shorter than an explicit width.
+  ink?: { x: number; y: number; width: number; height: number };
 }
 
 interface CacheEntry {
@@ -113,7 +116,8 @@ export class Compositor {
     if (layer.type === "text") {
       const fam = await this.family(layer);
       const lay = layoutText(layer, fam, 1);
-      return { x, y, width: lay.width, height: lay.height, rotation };
+      const ink = textInkBox(layer, lay);
+      return { x, y, width: lay.width, height: lay.height, rotation, ...(ink ? { ink: { x: x + ink.x, y: y + ink.y, width: ink.width, height: ink.height } } : {}) };
     }
     if (layer.type === "image") {
       const nat = await this.naturalSize(layer.src).catch(() => null);
@@ -272,6 +276,13 @@ export class Compositor {
     else if (layer.type === "text") content = drawText(layer, await this.family(layer), s);
     else content = shapeContent(layer, s);
     if (!content || content.w <= 0 || content.h <= 0) return null;
+    // Text and shapes sit on transparency: give spreading filters (blur) room
+    // to fade out instead of being clamped to the content box. Images are not
+    // padded — a blurred full-bleed photo keeps hard, opaque edges.
+    if (layer.type !== "image" && layer.filters?.length) {
+      const fp = filtersPad(layer.filters, s);
+      if (fp) content = padContent(content, fp);
+    }
     // 2. filters, 3. mask
     if (layer.filters?.length) filterCanvas(content.canvas, layer.filters, s);
     if (layer.mask && (layer.mask as { enabled?: boolean }).enabled !== false) {
@@ -464,6 +475,15 @@ function clipTo(surf: Surface, base: Surface): Surface {
   ctx.globalCompositeOperation = "destination-in";
   ctx.drawImage(base.canvas, base.x - surf.x, base.y - surf.y);
   return { canvas: c, x: surf.x, y: surf.y };
+}
+
+type Content = { canvas: AnyCanvas; ox: number; oy: number; w: number; h: number };
+
+// The same content with `pad` transparent px on every side.
+function padContent(c: Content, pad: number): Content {
+  const out = createCanvas(c.canvas.width + pad * 2, c.canvas.height + pad * 2);
+  ctx2d(out).drawImage(c.canvas, pad, pad);
+  return { ...c, canvas: out, ox: c.ox + pad, oy: c.oy + pad };
 }
 
 function shapeContent(l: ShapeLayer, s: number): { canvas: AnyCanvas; ox: number; oy: number; w: number; h: number } {

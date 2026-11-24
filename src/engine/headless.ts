@@ -74,7 +74,7 @@ const api = {
   },
   // Measured boxes (document px) of every layer with a box — text uses real font metrics.
   async layerBoxes(doc: PhotoDoc) {
-    const out: Record<string, { x: number; y: number; width: number; height: number; rotation: number }> = {};
+    const out: Record<string, { x: number; y: number; width: number; height: number; rotation: number; ink?: { x: number; y: number; width: number; height: number } }> = {};
     const list: Parameters<Parameters<typeof walkLayers>[1]>[0][] = [];
     walkLayers(doc.layers, (l) => void list.push(l));
     for (const l of list) {

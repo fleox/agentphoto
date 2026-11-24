@@ -7,6 +7,7 @@
 import type { ProjectFs } from "../core/fs";
 import { closest } from "../core/suggest";
 import { OpsError } from "./context";
+import { ANCHORS, type Anchor } from "./geometry";
 import { createProject, type CreateProjectResult, type NewImage } from "./project";
 
 export interface TemplateInfo {
@@ -20,6 +21,10 @@ export interface TemplateInfo {
   height: number;
   // Image layer replaced by the user's photo.
   slot?: string;
+  // Where a cut-out subject belongs (canvas px): the first remove_background
+  // on the slot after a photo swap scales and moves the layer so the subject
+  // fits this box, aligned on `anchor` (e.g. "bottom" = standing on a floor).
+  subjectArea?: { x: number; y: number; width: number; height: number; anchor?: Anchor };
 }
 
 export type TemplateIndex = TemplateInfo[];
@@ -53,7 +58,17 @@ export function parseTemplateInfo(json: unknown, fallbackId: string): TemplateIn
     width: typeof t.width === "number" ? t.width : 1200,
     height: typeof t.height === "number" ? t.height : 630,
     ...(typeof t.slot === "string" ? { slot: t.slot } : {}),
+    ...(subjectArea(t.subjectArea) ? { subjectArea: subjectArea(t.subjectArea)! } : {}),
   };
+}
+
+function subjectArea(v: unknown): TemplateInfo["subjectArea"] | null {
+  if (!v || typeof v !== "object") return null;
+  const a = v as Record<string, unknown>;
+  if (!["x", "y", "width", "height"].every((k) => typeof a[k] === "number" && Number.isFinite(a[k]))) return null;
+  if (!((a.width as number) >= 1 && (a.height as number) >= 1)) return null;
+  const anchor = ANCHORS.includes(a.anchor as Anchor) ? (a.anchor as Anchor) : undefined;
+  return { x: a.x as number, y: a.y as number, width: a.width as number, height: a.height as number, ...(anchor ? { anchor } : {}) };
 }
 
 export async function instantiateTemplate(fs: ProjectFs, id: string, files: Record<string, Uint8Array | string>, opts: { name: string; title?: string; force?: boolean; image?: NewImage }): Promise<CreateProjectResult> {

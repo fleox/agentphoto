@@ -14,6 +14,7 @@ import {
   projectFs,
   runMutation,
   setPairs,
+  shownDir,
   strOpt,
   table,
   tool,
@@ -307,7 +308,7 @@ export const maskCommand: Command = {
       if (strOpt(options, "copy-id")) input.copyId = strOpt(options, "copy-id");
       const r = await tool<MutationResult & { mask: string; layer?: string }>(fs, "mask_generate", input);
       if (r.status === "refused") throw new CliError("validation", "The generated mask could not be applied.", "See details.issues.", 2, { issues: r.issues });
-      return printResult(io, { ...r, maskFile: `${fs.root}/${r.mask}` }, () => `Mask ${r.mask} (${String(r.size)}) set on "${r.layer ?? id}". ${r.plan.summary}\nLook at it: agentphoto render --project ${fs.root}`);
+      return printResult(io, { ...r, maskFile: `${fs.root}/${r.mask}` }, () => `Mask ${r.mask} (${String(r.size)}) set on "${r.layer ?? id}". ${r.plan.summary}\nLook at it: agentphoto render --project ${shownDir(fs.root, strOpt(options, "project"))}`);
     }
     usage(`Unknown mask action "${action}".`, "Use set, clear or generate.");
   },

@@ -772,6 +772,6 @@ export const fr: Messages = {
     agentTitle: "Laissez votre agent piloter",
     agentBody: "Claude Code, Claude ou tout client MCP modifie le même projet avec les outils agentphoto et regarde les rendus. Les changements s'affichent ici en direct.",
     privacyTitle: "Confidentiel par conception",
-    privacyBody: "Pas de serveur, pas de compte : les photos restent sur cet ordinateur. Seuls les modèles d'IA sont téléchargés, une fois, avec votre accord.",
+    privacyBody: "Pas de serveur, pas de compte : les photos restent sur cet ordinateur. Seuls les modèles d'IA sont téléchargés, une fois, avec votre accord. L'assistant (facultatif) envoie à Claude les aperçus qu'il génère.",
   },
 };

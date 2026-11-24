@@ -31,6 +31,7 @@ npx -y @fleox/agentphoto@0.1.0 doc patch --project my-photo --json '[{"op":"set"
 | `resizeImage` | `{ "op": "resizeImage", "width": 1280 }` (or `height`, `scale`: scales every layer) |
 | `rotateCanvas` | `{ "op": "rotateCanvas", "angle": 90 }` (90, 180, 270 clockwise) |
 | `flipCanvas` | `{ "op": "flipCanvas", "axis": "horizontal" }` (text layers move but stay readable) |
+| `fitLayer` | `{ "op": "fitLayer", "id": "photo", "subject": { "x": 881, "y": 306, "width": 475, "height": 329 }, "box": { "x": 160, "y": 90, "width": 1280, "height": 720 }, "anchor": "center" }` (scales and moves one layer so `subject` — canvas px, e.g. `remove-bg`'s `data.subject`; default the whole layer — fits `box`; `anchor` `bottom` stands it on a floor line) |
 
 All of these ops were run together on one project (`set`, `addLayer`, `updateLayer`, `merge`, `addFilter` × 2, `updateFilter`, `removeFilter`, `duplicateLayer`, `moveLayer`, `groupLayers`, `setMask`, `set` on a mask field, `remove` in one patch; then `ungroup`, `removeLayer`, `resizeCanvas`, `rotateCanvas`, `flipCanvas` with `--yes`).
 

@@ -3,7 +3,7 @@ import { join, resolve } from "node:path";
 import { describe, expect, it } from "vitest";
 import { COMMANDS } from "./commands";
 import { renderFailure } from "./commands/meta";
-import { parseScalar, setPairs } from "./commands/util";
+import { parseScalar, setPairs, shownDir } from "./commands/util";
 import { CliError } from "./output";
 import { cli, ok } from "./testing/cli";
 import { tempDir } from "./testing/tmp";
@@ -191,6 +191,16 @@ describe("project workflow (new → doc → layer → filter → mask → check)
     expect(tools).toEqual(expect.arrayContaining(["doc_patch", "render_preview", "export", "remove_background"]));
     expect((await ok(["tools", "call", "doc_summary", "--project", dir])).result).toMatchObject({ title: "Mug" });
     expect((await cli(["tools", "call", "nope", "--project", dir])).code).toBe(2);
+  });
+});
+
+describe("paths in human output", () => {
+  it("shows the project folder as typed, else relative to the cwd, else absolute", () => {
+    expect(shownDir("/home/me/work/shop", "shop", "/home/me/work")).toBe("shop");
+    expect(shownDir("/home/me/work/shop", undefined, "/home/me/work")).toBe("shop");
+    expect(shownDir("/home/me/work", undefined, "/home/me/work")).toBe(".");
+    expect(shownDir("/tmp/shop", undefined, "/home/me/work")).toBe("/tmp/shop");
+    expect(shownDir("/home/me/work/my shop", "my shop", "/home/me/work")).toBe('"my shop"');
   });
 });
 

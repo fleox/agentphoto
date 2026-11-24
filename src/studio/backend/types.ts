@@ -86,6 +86,9 @@ export interface Backend {
   engineOptions(): EngineOptions;
   // Where AI models come from (consent notice).
   modelSource: "hub" | "cli";
+  // True when the model is already on this computer (no download): the CLI's
+  // model cache in remote mode; unknown (false) in the browser.
+  modelCached(model: string): Promise<boolean>;
   onAiProgress(cb: (p: AiProgress) => void): () => void;
   createProject(opts: CreateOptions): Promise<void>;
   recent(): Promise<ProjectRef[]>;

@@ -11,7 +11,7 @@ export interface AiConfig {
   // Model host (default https://huggingface.co/) and path template.
   remoteHost?: string;
   remotePathTemplate?: string;
-  // Folder (URL) holding ort-wasm-simd-threaded.jsep.{mjs,wasm}.
+  // Folder (URL) holding ort-wasm-simd-threaded.asyncify.{mjs,wasm}.
   wasmPaths?: string;
   onProgress?(p: { model: string; progress: number; label: string }): void;
 }

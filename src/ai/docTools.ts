@@ -11,7 +11,7 @@ import { OpsError } from "../ops/context";
 import { applyDoc, flattenLayers, getDoc, patchDoc, PATCH_OPS, summarizeDoc, type PatchOp } from "../ops/doc";
 import { createProject, loadProject } from "../ops/project";
 import { findTemplate, listTemplates } from "../ops/templates";
-import { bool, compactIssues, issueCounts, mutationResult, num, optStr, str } from "./shared";
+import { bool, compactIssues, issueCounts, libraryReader, mutationResult, num, optStr, str } from "./shared";
 import type { AiTool, JsonSchema, ToolContext } from "./types";
 
 export const dryRunProp: JsonSchema = { type: "boolean", description: "Preview the plan and issues without writing (default false)." };
@@ -67,16 +67,7 @@ function catalogGet(section?: string, id?: string): unknown {
 }
 
 async function patch(ctx: ToolContext, ops: PatchOp[], dryRun: boolean) {
-  const lib = ctx.host?.library;
-  const r = await patchDoc(ctx.fs, ops, {
-    dryRun,
-    readLibrary: lib
-      ? async (id) => {
-          const a = lib.index.assets.find((x) => x.id === id);
-          return a?.path ? lib.read(a.path) : null;
-        }
-      : undefined,
-  });
+  const r = await patchDoc(ctx.fs, ops, { dryRun, readLibrary: libraryReader(ctx) });
   return mutationResult(r, dryRun);
 }
 
@@ -185,7 +176,7 @@ export const DOC_TOOLS: AiTool[] = [
   {
     name: "doc_patch",
     description:
-      `Atomic list of edits, validated together (nothing written if any fails). Ops: ${PATCH_OPS.join(", ")}. Shapes: { op: "set", path: "layers#title.size", value: 96 } · { op: "merge", path, value } (objects merge, null deletes) · { op: "remove", path } · { op: "addLayer", layer, parent?, index?, above?, below? } · { op: "updateLayer", id, set } (deep merge, null deletes a field) · { op: "removeLayer", id } · { op: "moveLayer", id, parent?, index?, above?, below? } · { op: "duplicateLayer", id, newId?, offset? } · { op: "groupLayers", ids, id, name? } · { op: "ungroup", id } · { op: "addFilter", id, filter, index? } · { op: "updateFilter", id, index, set } · { op: "removeFilter", id, index } · { op: "setMask", id, mask | null } · { op: "crop", x, y, width, height } · { op: "resizeCanvas", width, height, anchor? } · { op: "resizeImage", width?, height?, scale? } · { op: "rotateCanvas", angle: 90|180|270 } · { op: "flipCanvas", axis: horizontal|vertical }. Paths: "canvas.background", "layers#<id>.<field>", "layers#<id>.filters[0].radius".`,
+      `Atomic list of edits, validated together (nothing written if any fails). Ops: ${PATCH_OPS.join(", ")}. Shapes: { op: "set", path: "layers#title.size", value: 96 } · { op: "merge", path, value } (objects merge, null deletes) · { op: "remove", path } · { op: "addLayer", layer, parent?, index?, above?, below? } · { op: "updateLayer", id, set } (deep merge, null deletes a field) · { op: "removeLayer", id } · { op: "moveLayer", id, parent?, index?, above?, below? } · { op: "duplicateLayer", id, newId?, offset? } · { op: "groupLayers", ids, id, name? } · { op: "ungroup", id } · { op: "addFilter", id, filter, index? } · { op: "updateFilter", id, index, set } · { op: "removeFilter", id, index } · { op: "setMask", id, mask | null } · { op: "crop", x, y, width, height } · { op: "resizeCanvas", width, height, anchor? } · { op: "resizeImage", width?, height?, scale? } · { op: "rotateCanvas", angle: 90|180|270 } · { op: "flipCanvas", axis: horizontal|vertical } · { op: "fitLayer", id, box: { x, y, width, height }, subject?, anchor? } (scale + move a layer so subject — a canvas-px region of it, e.g. remove_background's subject; default its box — fits in box, aligned on anchor: center, bottom…). Paths: "canvas.background", "layers#<id>.<field>", "layers#<id>.filters[0].radius".`,
     inputSchema: { type: "object", properties: { ops: { type: "array", items: { type: "object", additionalProperties: true }, description: "Patch operations, applied in order." }, dryRun: dryRunProp }, required: ["ops"] },
     mutating: true,
     handler: (ctx, input) => patch(ctx, input.ops as PatchOp[], bool(input, "dryRun")),

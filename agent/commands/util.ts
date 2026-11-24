@@ -1,5 +1,5 @@
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
-import { dirname, resolve } from "node:path";
+import { dirname, isAbsolute, relative, resolve } from "node:path";
 import { NodeFs } from "../nodeFs";
 import { CliError, printResult, type Io } from "../output";
 import type { CommandOption, OptionValue } from "./types";
@@ -283,6 +283,18 @@ export async function runMutation(io: Io, options: Options, fs: NodeFs, name: st
 }
 
 // Absolute path of a project file (results print project-relative paths).
+// A project folder for a follow-up command in human text: as the user typed
+// it when known, else relative to the current directory when inside it, else
+// absolute; quoted when it has spaces. --json output keeps absolute paths.
+export function shownDir(dir: string, typed?: string, cwd = process.cwd()): string {
+  let p = typed?.trim();
+  if (!p) {
+    const rel = relative(cwd, dir);
+    p = rel === "" ? "." : !rel.startsWith("..") && !isAbsolute(rel) ? rel : dir;
+  }
+  return /\s/.test(p) ? JSON.stringify(p) : p;
+}
+
 export function absPath(fs: NodeFs, path: string): string {
   return resolve(fs.root, path);
 }

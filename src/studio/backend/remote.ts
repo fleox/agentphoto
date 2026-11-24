@@ -120,6 +120,15 @@ export class RemoteBackend implements Backend {
     return this.info.libraryBase;
   }
 
+  async modelCached(model: string): Promise<boolean> {
+    try {
+      const d = await apiJson<{ models: { id: string; cached: boolean }[] }>("./api/models");
+      return !!d?.models?.some((m) => m.id === model && m.cached);
+    } catch {
+      return false;
+    }
+  }
+
   async templates(): Promise<TemplateInfo[]> {
     try {
       const d = await apiJson<{ templates: TemplateInfo[] } | TemplateInfo[]>("./api/templates");

@@ -252,7 +252,7 @@ agentphoto mask <set|clear|generate> <layer> [--project <dir>]
 Remove the background of a photo layer with local AI (nothing is uploaded; the model downloads once): writes a mask to assets/masks/ and sets it on the layer — non-destructive (`mask clear` restores). --background adds a colour / gradient under the cut-out, --shadow a soft drop shadow.
 
 ```
-agentphoto remove-bg <layer> [--model rmbg-1.4|modnet] [--background <paint>] [--shadow] [--feather <px>] [--threshold <0-255>]
+agentphoto remove-bg <layer> [--model rmbg-1.4|modnet] [--background <paint>] [--shadow] [--feather <px>] [--threshold <0-255>] [--fit x,y,w,h|none] [--anchor center|bottom|…]
 ```
 
 | Option | Description |
@@ -263,6 +263,8 @@ agentphoto remove-bg <layer> [--model rmbg-1.4|modnet] [--background <paint>] [-
 | `--shadow` | Add a soft drop shadow under the subject. |
 | `--feather <value>` | Soften the edge, px. |
 | `--threshold <value>` | Hard edge: keep pixels with confidence ≥ threshold (0..255). Default: soft alpha (best for hair). |
+| `--fit <value>` | Scale and move the layer so the subject fits this canvas box "x,y,width,height"; "none" leaves it in place. Default: the template's subject area on its photo slot (first cut-out after `new --template … --image`). |
+| `--anchor <value>` | With --fit: where the subject sits in the box — center (default), bottom (on a floor line), top, left, right, top-left… |
 
 _Writes to the project._
 

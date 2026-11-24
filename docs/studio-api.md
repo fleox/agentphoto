@@ -30,6 +30,7 @@ status: 400 (bad input / invalid path / validation), 404 (`notFound`, `no-projec
 | Method & path | Body | Answer `data` |
 |---|---|---|
 | `GET /api/info` | — | `{ version, project: { dir, manifest \| null, exists } \| null, assetBase: "/project/", libraryBase: "/__library/", engineBase: "/__engine/", modelsBase: "/__models/" }` — `exists` is false until `photo.json` exists (create it with `project_create`). |
+| `GET /api/models` | — | `{ models: [{ id, task, sizeMb, cached, cachedMb }] }` — the AI models of the catalog and whether the CLI's model cache (`~/.cache/agentphoto/models`, `AGENTPHOTO_MODELS`) already holds them; the Studio skips its download notice for cached models. |
 | `GET /api/catalog` | — | the catalog (`src/core/catalog.ts` `CATALOG`): layer types, filters, looks, effects, blend modes, shapes, fonts, sizes, models. |
 | `GET /api/library` | — | `library/index.json` (`{ assets }`). |
 | `GET /api/templates` | — | `{ templates: TemplateInfo[] }` (`templates/<id>/template.json`). |

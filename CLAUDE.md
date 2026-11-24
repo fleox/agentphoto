@@ -23,7 +23,7 @@ src/
   studio/    Studio SPA (React 19 + Tailwind 3 + lucide-react)
 agent/       `agentphoto` CLI (Node ≥ 22, bundled to dist/agent/agentphoto.mjs) — commands/, mcp/, render/ (Chrome + CDP, local server, engine session), nodeFs.ts
 library/     fonts/ (OFL woff2) + images/ (CC0 sample photos) + index.json + LICENSES.md
-templates/   starter projects: <id>/photo.json, template.json { id, title, description, category, tags, width, height, slot? }, preview.jpg
+templates/   starter projects: <id>/photo.json, template.json { id, title, description, category, tags, width, height, slot?, subjectArea? }, preview.jpg
 plugin/      Claude Code skills (plugin/skills/<name>/SKILL.md) + .claude-plugin/plugin.json
 hermes/      Hermes Agent skills, generated from plugin/skills (+ python/ wrapper and helpers, tests/)
 docs/        user docs (catalog.md + cli.md reference generated)
@@ -65,7 +65,7 @@ loadProject(fs) → { manifest, doc };  saveDoc(fs, doc, { allowInvalid? })
 getDoc(fs);  summarizeDoc(doc) → DocSummary;  diffDocs(before, after) → DocPlan { empty, layers: { added, removed, changed, moved }, sections, summary }
 applyDoc(fs, doc, { dryRun? }) → { plan, issues, applied }      // never throws on invalid docs
 patchDoc(fs, ops, { dryRun?, sizes?, readLibrary? }) → { plan, issues, applied, doc }   // atomic; failing op → OpsError with details.opIndex
-applyPatchOps(doc, ops, sizes?)   // pure. PATCH_OPS: set, merge, remove, addLayer, updateLayer, removeLayer, moveLayer, duplicateLayer, groupLayers, ungroup, addFilter, updateFilter, removeFilter, setMask, crop, resizeCanvas, resizeImage, rotateCanvas, flipCanvas
+applyPatchOps(doc, ops, sizes?)   // pure. PATCH_OPS: set, merge, remove, addLayer, updateLayer, removeLayer, moveLayer, duplicateLayer, groupLayers, ungroup, addFilter, updateFilter, removeFilter, setMask, crop, resizeCanvas, resizeImage, rotateCanvas, flipCanvas, fitLayer
 flattenLayers(doc) → FlatLayer[] (top → bottom);  findLayer / walkLayers / allLayerIds / referencedFiles (tree.ts)
 addAsset(fs, { name, bytes, kind?, source, license?, author?, sourceUrl?, overwrite? }) → AssetEntry;  listAssets(fs);  removeAsset(fs, path, { force? });  addAssetFromUrl(fs, url, fetch)
 checkProject(fs, { library? }) → CheckReport { ok, issues, counts, canvas, layers, cost, assetsKb, licences }
@@ -100,3 +100,7 @@ listTemplates(index, { category?, query? });  findTemplate;  parseTemplateInfo; 
 | Distribution | `plugin/`, `hermes/`, `.claude-plugin/`, `docs/` (except generated parts), `scripts/`, `README.md`, `AGENTS.md`, `changelog.json` |
 
 `src/core/types.ts`, `src/core/catalog.ts`, `src/ai/types.ts`, `src/engine/index.ts` are **contracts**: change them only additively and say so in your report.
+
+## Contributor skills
+
+Claude Code, this repo only — not distributed (the agent skills are `plugin/skills/`). In `.claude/skills/`: `agent-cli-internals` (CLI, MCP, headless engine session, model cache proxy, Studio API, AI tool exposure, skills, Hermes, releases, multi-agent QA), `engine-internals` (core types / catalog / validation, ops and patch ops, AI tools), `pixel-internals` (compositor, filters / looks, effects, text and fonts, local AI with transformers.js / ONNX Runtime, headless entry, engine build), `studio-internals` (Studio SPA + its API), `content-internals` (templates, library, recipes), `repo-presentation` (README / npm page, docs, images and demos, wording rules), `create-mr` (review + GitHub PR). `.claude/settings.json` allow-lists the read / check commands.

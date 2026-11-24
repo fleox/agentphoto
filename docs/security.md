@@ -2,7 +2,7 @@
 
 ## Your photos stay on your computer
 
-- **Nothing is uploaded.** Projects are folders on your disk. Editing, previews, colour analysis, background removal, AI masks and exports all run locally, in Node.js and in your own Chrome / Chromium / Edge / Brave started headless with a temporary profile.
+- **AgentPhoto uploads nothing.** Projects are folders on your disk. Editing, previews, colour analysis, background removal, AI masks and exports all run locally, in Node.js and in your own Chrome / Chromium / Edge / Brave started headless with a temporary profile. The one exception is a choice you make: the optional Studio assistant sends the previews it renders to Claude (below).
 - **Source files are never modified.** Imported photos are copied into `assets/images/`; edits are data in `photo.json`; AI masks are new PNGs in `assets/masks/`.
 - **No account, no telemetry, no update check, no analytics, no CDN, no web fonts.** Fonts are bundled in `library/fonts`.
 
@@ -13,9 +13,11 @@
 | First use of an AI model (`remove-bg`, `mask generate`, `models pull`, the Studio's AI dialogs) | The model files (25–170 MB), **once**; cached in `~/.cache/agentphoto/models` (`AGENTPHOTO_MODELS` overrides) | `huggingface.co` |
 | `new --image <url>`, `assets add --url`, MCP `assets_add { url }` | The image you asked for, saved into the project with its source | the URL you gave |
 | `npx -y @fleox/agentphoto@…` | The package itself | the npm registry |
-| The Studio assistant (optional) | The conversation and tool results, with your own API key kept in the browser's `localStorage` | `api.anthropic.com` |
+| The Studio assistant (optional) | The conversation and tool results, with your own API key kept in the browser's `localStorage`. **Images go to Claude only when a tool renders a preview** (`render_preview`): the rendered picture of your document is attached so Claude can look at it | `api.anthropic.com` |
 
-Your photos are never sent anywhere in any of these cases: the models come to the photos, not the reverse. `agentphoto models remove <id>` deletes a model's cache.
+Apart from those assistant previews, your photos are never sent anywhere in these cases: the models come to the photos, not the reverse. `agentphoto models remove <id>` deletes a model's cache. Don't use the assistant on pictures that must not leave your computer.
+
+The same holds for any AI agent you connect yourself (Claude Code, an MCP client): AgentPhoto runs locally and only returns renders to that agent (`render_preview` images, file paths); what the agent then sends to its model provider is up to the agent and its settings.
 
 ## Local servers
 

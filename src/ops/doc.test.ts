@@ -51,6 +51,8 @@ describe("summarizeDoc", () => {
     expect(s.layers[1].children!.map((l) => l.id)).toEqual(["badge", "title"]);
     expect(s.layers[2]).toMatchObject({ type: "image", box: [10, 20, 40, 30], mask: "shape", filters: ["blur", "invert"], effects: ["dropShadow"] });
     expect(s.layers[2]).not.toHaveProperty("parent");
+    // Adjustment layers list their filters in the same column as any layer.
+    expect(s.layers[0]).toMatchObject({ type: "adjustment", detail: "filters the layers below", filters: ["vibrance"] });
     expect(s.counts).toEqual({ layers: 6, byType: { fill: 1, image: 1, group: 1, text: 1, shape: 1, adjustment: 1 }, hidden: 0, masks: 2, filters: 3 });
     expect(s.sources).toEqual(["assets/images/photo.png"]);
     const d = base();
@@ -115,7 +117,7 @@ describe("applyPatchOps — paths", () => {
     expect(opError(() => applyPatchOps(base(), {} as unknown as PatchOp[])).code).toBe("invalid");
   });
   it("covers every op of PATCH_OPS in this file", () => {
-    expect(PATCH_OPS).toHaveLength(19);
+    expect(PATCH_OPS).toHaveLength(20);
   });
   it("never mutates its input", () => {
     const d = base();
@@ -357,6 +359,23 @@ describe("applyPatchOps — geometry", () => {
     const twice = apply([{ op: "flipCanvas", axis: "horizontal" }, { op: "flipCanvas", axis: "horizontal" }], d);
     expect(layer(twice, "photo")).toEqual(layer(d, "photo"));
     expect(opError(() => apply([{ op: "flipCanvas", axis: "diagonal" } as unknown as PatchOp])).code).toBe("invalid");
+  });
+  it("fitLayer scales and moves a layer so its subject fits a box, on an anchor", () => {
+    const r = apply([{ op: "fitLayer", id: "photo", subject: { x: 20, y: 30, width: 10, height: 10 }, box: { x: 100, y: 0, width: 50, height: 100 }, anchor: "bottom" }]);
+    const p = layer<ImageLayer>(r, "photo");
+    expect(p).toMatchObject({ x: 50, y: 0, width: 200, height: 150 });
+    expect(p.filters?.[0]).toMatchObject({ type: "blur", radius: 20 });
+    expect(p.effects?.dropShadow).toMatchObject({ distance: 50, blur: 100 });
+    expect(p.mask).toMatchObject({ width: 200, height: 150, feather: 10 });
+    // The subject now sits at the bottom of the box: (100, 50) 50 × 50.
+    expect([p.x! + 10 * 5, p.y! + 10 * 5]).toEqual([100, 50]);
+    // Default subject = the whole layer, centred; layers inside groups too.
+    expect(layer<ImageLayer>(apply([{ op: "fitLayer", id: "photo", box: { x: 0, y: 0, width: 80, height: 80 } }]), "photo")).toMatchObject({ x: 0, y: 10, width: 80, height: 60 });
+    expect(layer(apply([{ op: "fitLayer", id: "badge", box: { x: 0, y: 0, width: 10, height: 10 }, anchor: "top-left" }]), "badge")).toMatchObject({ x: 0, y: 0, width: 10, height: 10, radius: 2 });
+    expect(opError(() => apply([{ op: "fitLayer", id: "bg", box: { x: 0, y: 0, width: 10, height: 10 } }])).code).toBe("invalid");
+    expect(opError(() => apply([{ op: "fitLayer", id: "nope", box: { x: 0, y: 0, width: 10, height: 10 } }])).code).toBe("notFound");
+    expect(opError(() => apply([{ op: "fitLayer", id: "photo", box: { x: 0, y: 0, width: 0, height: 10 } }])).code).toBe("invalid");
+    expect(opError(() => apply([{ op: "fitLayer", id: "photo", box: { x: 0, y: 0, width: 10, height: 10 }, anchor: "middle" as never }])).code).toBe("invalid");
   });
   it("geometry ops need image sizes: from sizes, from crop, or an error", () => {
     const d = base();

@@ -123,52 +123,98 @@ function scaleFilters(filters: Filter[] | undefined, k: number): void {
 export function scaleDoc(doc: PhotoDoc, sx: number, sy: number, sizes: SizeMap = {}): PhotoDoc {
   if (!(sx > 0) || !(sy > 0)) throw new OpsError("invalid", "The scale must be > 0.");
   const out = clone(doc);
+  eachLayer(out.layers, (l) => scaleLayer(l, sx, sy, sizes));
+  out.canvas = { ...out.canvas, width: Math.max(1, Math.round(doc.canvas.width * sx)), height: Math.max(1, Math.round(doc.canvas.height * sy)) };
+  return out;
+}
+
+// Scales one layer's geometry and distances (not its children) around the canvas origin.
+function scaleLayer(l: Layer, sx: number, sy: number, sizes: SizeMap): void {
   const k = Math.sqrt(sx * sy);
-  eachLayer(out.layers, (l) => {
-    pinSize(l, sizes);
-    if (hasBox(l)) {
-      l.x = r2((l.x ?? 0) * sx);
-      l.y = r2((l.y ?? 0) * sy);
-      if (l.width !== undefined) l.width = r2(l.width * sx);
-      if (l.height !== undefined) l.height = r2(l.height * sy);
-    } else if (l.mask && isShapeMask(l.mask)) {
-      const m = l.mask as ShapeMask;
+  pinSize(l, sizes);
+  if (hasBox(l)) {
+    l.x = r2((l.x ?? 0) * sx);
+    l.y = r2((l.y ?? 0) * sy);
+    if (l.width !== undefined) l.width = r2(l.width * sx);
+    if (l.height !== undefined) l.height = r2(l.height * sy);
+  } else if (l.mask && isShapeMask(l.mask)) {
+    const m = l.mask as ShapeMask;
+    m.x = r2(m.x * sx);
+    m.y = r2(m.y * sy);
+    m.width = r2(m.width * sx);
+    m.height = r2(m.height * sy);
+  }
+  if (l.mask) {
+    if (hasBox(l) && isShapeMask(l.mask)) {
+      const m = l.mask;
       m.x = r2(m.x * sx);
       m.y = r2(m.y * sy);
       m.width = r2(m.width * sx);
       m.height = r2(m.height * sy);
     }
-    if (l.mask) {
-      if (hasBox(l) && isShapeMask(l.mask)) {
-        const m = l.mask;
-        m.x = r2(m.x * sx);
-        m.y = r2(m.y * sy);
-        m.width = r2(m.width * sx);
-        m.height = r2(m.height * sy);
-      }
-      scalePx(l.mask as unknown as Record<string, unknown>, ["feather", "radius"], k);
+    scalePx(l.mask as unknown as Record<string, unknown>, ["feather", "radius"], k);
+  }
+  if (l.type === "text") {
+    scalePx(l as unknown as Record<string, unknown>, ["size", "letterSpacing"], k);
+    if (l.background) {
+      const p = l.background.padding;
+      l.background.padding = Array.isArray(p) ? [r2(p[0] * k), r2(p[1] * k)] : typeof p === "number" ? r2(p * k) : p;
+      scalePx(l.background as Record<string, unknown>, ["radius"], k);
     }
-    if (l.type === "text") {
-      scalePx(l as unknown as Record<string, unknown>, ["size", "letterSpacing"], k);
-      if (l.background) {
-        const p = l.background.padding;
-        l.background.padding = Array.isArray(p) ? [r2(p[0] * k), r2(p[1] * k)] : typeof p === "number" ? r2(p * k) : p;
-        scalePx(l.background as Record<string, unknown>, ["radius"], k);
-      }
+  }
+  if (l.type === "shape") {
+    scalePx(l as unknown as Record<string, unknown>, ["radius"], k);
+    if (l.stroke) scalePx(l.stroke as Record<string, unknown>, ["width"], k);
+  }
+  scaleFilters(l.filters, k);
+  if (l.effects) {
+    for (const def of EFFECTS) {
+      const fx = (l.effects as Record<string, Record<string, unknown> | null | undefined>)[def.id];
+      scalePx(fx, def.params.filter((p) => p.px).map((p) => p.name), k);
     }
-    if (l.type === "shape") {
-      scalePx(l as unknown as Record<string, unknown>, ["radius"], k);
-      if (l.stroke) scalePx(l.stroke as Record<string, unknown>, ["width"], k);
-    }
-    scaleFilters(l.filters, k);
-    if (l.effects) {
-      for (const def of EFFECTS) {
-        const fx = (l.effects as Record<string, Record<string, unknown> | null | undefined>)[def.id];
-        scalePx(fx, def.params.filter((p) => p.px).map((p) => p.name), k);
-      }
-    }
+  }
+}
+
+// ─── fit a layer (or a part of it) into a box ───────────────────────────
+
+export interface Rect {
+  x: number;
+  y: number;
+  width: number;
+  height: number;
+}
+
+const isRect = (r: unknown): r is Rect => !!r && typeof r === "object" && ["x", "y", "width", "height"].every((k) => Number.isFinite((r as Record<string, unknown>)[k]));
+
+// Scales (uniformly) and moves a box layer so `subject` — a canvas-px region
+// of it, default its whole box (e.g. the `subject` returned by
+// remove_background) — fits inside `box`, aligned on `anchor` ("bottom" sits a
+// cut-out on a floor line). The layer keeps its proportions; parts outside the
+// subject may leave the canvas (they are usually masked out).
+export function fitLayerDoc(doc: PhotoDoc, id: string, box: Rect, opts: { subject?: Rect | null; anchor?: Anchor; sizes?: SizeMap } = {}): PhotoDoc {
+  if (!isRect(box) || box.width < 1 || box.height < 1) throw new OpsError("invalid", "fitLayer needs box { x, y, width ≥ 1, height ≥ 1 } (canvas px).");
+  const anchor = opts.anchor ?? "center";
+  if (!ANCHORS.includes(anchor)) throw new OpsError("invalid", `Unknown anchor "${anchor}".`, `Anchors: ${ANCHORS.join(", ")}.`);
+  const out = clone(doc);
+  let layer: Layer | null = null;
+  eachLayer(out.layers, (l) => {
+    if (l.id === id && !layer) layer = l;
   });
-  out.canvas = { ...out.canvas, width: Math.max(1, Math.round(doc.canvas.width * sx)), height: Math.max(1, Math.round(doc.canvas.height * sy)) };
+  const l = layer as Layer | null;
+  if (!l) throw new OpsError("notFound", `No layer "${id}".`, "layer_list lists the layer ids.");
+  if (!hasBox(l)) throw new OpsError("invalid", `"${id}" is a ${l.type} layer: fitLayer moves image, text and shape layers.`);
+  pinSize(l, opts.sizes ?? {});
+  const b = layerBox(l, opts.sizes);
+  if (!b || !(b.width > 0) || !(b.height > 0)) throw new OpsError("invalid", `The box of layer "${id}" is unknown.`, "Give the layer an explicit width and height.");
+  const subj = opts.subject ?? b;
+  if (!isRect(subj) || !(subj.width > 0) || !(subj.height > 0)) throw new OpsError("invalid", "fitLayer subject must be { x, y, width > 0, height > 0 } (canvas px).", "Pass the subject returned by remove_background, or omit it to fit the whole layer.");
+  const k = Math.min(box.width / subj.width, box.height / subj.height);
+  const [ox, oy] = anchorOffset(anchor, box.width - subj.width * k, box.height - subj.height * k);
+  const relX = subj.x - b.x;
+  const relY = subj.y - b.y;
+  scaleLayer(l, k, k, opts.sizes ?? {});
+  l.x = r2(box.x + ox - relX * k);
+  l.y = r2(box.y + oy - relY * k);
   return out;
 }
 

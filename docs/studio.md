@@ -29,11 +29,11 @@ Without the CLI (`npm run dev` in a clone) the Studio keeps projects in the brow
 
 ## The assistant
 
-The assistant panel runs a tool-use loop with Claude over the same tools (including `render_preview`, whose images it looks at). It calls the Claude Messages API directly from the browser with **your own API key**, stored in the browser's `localStorage` and sent only to `api.anthropic.com`. It is optional; everything else in the Studio works without it, offline.
+The assistant panel runs a tool-use loop with Claude over the same tools (including `render_preview`, whose images it looks at). It calls the Claude Messages API directly from the browser with **your own API key**, stored in the browser's `localStorage` and sent only to `api.anthropic.com`. Images go to Claude only when a tool renders a preview (the render of your document is attached so Claude can look at it); nothing else in the Studio sends your photos anywhere. It is optional; everything else in the Studio works without it, offline.
 
 ## AI in the browser
 
-Background removal and Segment Anything masks run in the page (ONNX models through transformers.js, WebAssembly). With `agentphoto studio`, models come from the local cache (`~/.cache/agentphoto/models`) through the server's `/__models/` proxy and are downloaded from Hugging Face only the first time.
+Background removal and Segment Anything masks run in the page (ONNX models through transformers.js, WebAssembly). With `agentphoto studio`, models come from the local cache (`~/.cache/agentphoto/models`) through the server's `/__models/` proxy and are downloaded from Hugging Face only the first time: the Studio shows a one-time download notice (model, size, licence) only for a model the cache does not hold yet (`agentphoto models list` shows what is cached; `models pull` fetches one ahead of time).
 
 ## Shortcuts
 

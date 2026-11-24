@@ -8,6 +8,7 @@ import { readAssetManifest } from "../ops/assets";
 import { createProject } from "../ops/project";
 import { findLayer } from "../ops/tree";
 import { tinyPng } from "../test-support/png";
+import { coverCuts } from "./imageTools";
 import { AI_TOOLS, callAiTool, findAiTool, listAiTools, resultImages, TOOL_ORDER } from "./tools";
 import { checkInput } from "./shared";
 import type { EncodedImage, EngineHost, JsonSchema, SegmentPrompt, ToolContext, ToolHost } from "./types";
@@ -351,6 +352,38 @@ describe("engine tools with a fake EngineHost", () => {
     expect(await c2.fs.exists("dist/tool-test.avif")).toBe(false);
   });
 
+  it("export: the cover-crop note judges text by the glyphs it paints, not its box", async () => {
+    const d: PhotoDoc = {
+      version: 1,
+      id: "t",
+      canvas: { width: 1200, height: 630 },
+      layers: [
+        { id: "title", type: "text", text: "Hi", x: 0, y: 100, width: 1200, align: "center", size: 80 },
+        { id: "badge", type: "shape", shape: "rect", x: 0, y: 0, width: 100, height: 100 },
+      ],
+    };
+    const square = { source: { x: 285, y: 0, width: 630, height: 630 } };
+    // Box only (no measurements): the 1200 px wide box is "cut".
+    expect(coverCuts(d, square)).toEqual(["title", "badge"]);
+    // Measured: the centred glyphs (x 540…660) stay inside the square crop.
+    const measured = { title: { x: 0, y: 100, width: 1200, height: 96, rotation: 0, ink: { x: 540, y: 108, width: 120, height: 80 } } };
+    expect(coverCuts(d, square, measured)).toEqual(["badge"]);
+    expect(coverCuts(d, { source: { x: 600, y: 0, width: 600, height: 630 } }, measured)).toEqual(["title", "badge"]);
+    expect(coverCuts(d, { source: { x: 0, y: 0, width: 1200, height: 630 } })).toEqual([]);
+
+    // Through the export tool: the engine's layerBoxes feeds it.
+    const { engine } = fakeEngine();
+    // 400 × 200 canvas → square cover = source x 100…300; the centred glyphs sit at 180…220.
+    let ink = { x: 180, y: 28, width: 40, height: 40 };
+    const c = await ctx({ engine: { ...engine, layerBoxes: async () => ({ title: { x: 0, y: 20, width: 400, height: 48, rotation: 0, ink } }) } });
+    await callAiTool(c, "layer_add", { layer: { id: "title", type: "text", text: "Hi", x: 0, y: 20, width: 400, align: "center", size: 40 } });
+    const r = (await callAiTool(c, "export", { preset: "square", fit: "cover" })) as { files: { note?: string }[] };
+    expect(r.files[0].note ?? "").not.toContain("title");
+    ink = { x: 20, y: 28, width: 360, height: 40 };
+    const r2 = (await callAiTool(c, "export", { preset: "square", fit: "cover", name: "wide" })) as { files: { note?: string }[] };
+    expect(r2.files[0].note).toContain("cuts layer title");
+  });
+
   it("image_analyze checks the layer id", async () => {
     const c = await ctx({ engine: fakeEngine().engine });
     expect(await callAiTool(c, "image_analyze", {})).toMatchObject({ brightness: 50 });
@@ -379,6 +412,36 @@ describe("engine tools with a fake EngineHost", () => {
     await callAiTool(c, "layer_add", { layer: { id: "t", type: "text", text: "x" } });
     await expect(callAiTool(c, "remove_background", { id: "t" })).rejects.toMatchObject({ code: "invalid" });
     await expect(callAiTool(c, "remove_background", { id: "photo", model: "sam-base" })).rejects.toMatchObject({ code: "invalid" });
+  });
+
+  it("remove_background fit: places the subject in a box (explicit, or the template's subject area once)", async () => {
+    const { engine } = fakeEngine({ bbox: { x: 2, y: 1, width: 5, height: 5 } });
+    const c = await ctx({ engine });
+    const r = (await callAiTool(c, "remove_background", { id: "photo", fit: { x: 0, y: 0, width: 100, height: 100, anchor: "bottom" } })) as { subject: unknown; fitted: unknown; hint: string };
+    expect(await layerOf(c, "photo")).toMatchObject({ x: -40, y: 40, width: 200, height: 100 });
+    expect(r.subject).toEqual({ x: 0, y: 50, width: 100, height: 50 });
+    expect(r.fitted).toMatchObject({ box: { x: 0, y: 0, width: 100, height: 100 }, anchor: "bottom", from: "input" });
+    await expect(callAiTool(c, "remove_background", { id: "photo", fit: { x: 0, y: 0, width: 0, height: 10 } })).rejects.toMatchObject({ code: "invalid" });
+    await expect(callAiTool(c, "remove_background", { id: "photo", fit: { x: 0, y: 0, width: 10, height: 10, anchor: "middle" } })).rejects.toMatchObject({ code: "invalid" });
+
+    // From a template with a subject area: the first cut-out of the slot fits it.
+    const tdoc = { version: 1, id: "shop", canvas: { width: 400, height: 400 }, layers: [{ id: "photo", type: "image", src: "library:portrait", x: 0, y: 0, width: 400, height: 400, fit: "contain", mask: { src: "assets/masks/photo-cutout.png" } }] };
+    const files = { "photo.json": JSON.stringify(tdoc), "template.json": JSON.stringify({ id: "shop", slot: "photo" }), "assets/masks/photo-cutout.png": tinyPng(4, 4) };
+    const host: ToolHost = { engine, templates: { index: [{ id: "shop", title: "Shop", description: "", category: "product", tags: [], width: 400, height: 400, slot: "photo", subjectArea: { x: 100, y: 100, width: 200, height: 200, anchor: "bottom" } }], files: async () => files } };
+    const fs = new MemoryFs();
+    await createProject(fs, { name: "shop", template: "shop", templateFiles: files, image: { name: "mug.png", bytes: tinyPng(40, 40) } });
+    const t = { fs, host };
+    const first = (await callAiTool(t, "remove_background", { id: "photo" })) as { subject: unknown; fitted: unknown; hint: string };
+    expect(first.fitted).toMatchObject({ from: "template shop", anchor: "bottom" });
+    // Subject 200 × 200 (mask 5/10 of a 400 px box) → exactly the 200 × 200 area.
+    expect(first.subject).toEqual({ x: 100, y: 100, width: 200, height: 200 });
+    expect(first.hint).toContain("fit: false");
+    const before = await layerOf(t, "photo");
+    // Already cut out: a second removal leaves the layer where it is.
+    const second = (await callAiTool(t, "remove_background", { id: "photo" })) as { fitted?: unknown; hint: string };
+    expect(second.fitted).toBeUndefined();
+    expect(second.hint).toContain('"op": "fitLayer"');
+    expect(await layerOf(t, "photo")).toMatchObject({ x: (before as ImageLayer).x, width: (before as ImageLayer).width });
   });
 
   it("mask_generate: points / box / color validation, invert, target copy", async () => {

@@ -45,7 +45,7 @@ A paint is a CSS colour or a gradient. Gradient `stops` are colours spread evenl
 { "type": "linear", "angle": 90, "stops": ["#1b1340", "#ff7a59"] }
 ```
 
-`angle`: 0 = left → right, 90 = top → bottom. Radial: `{ "type": "radial", "stops": [[0, "#ffd166"], [1, "rgba(255,209,102,0)"]], "cx": 0.5, "cy": 0.5, "radius": 1 }` (centre and radius are fractions of the painted box).
+`angle`: 0 = left → right, 90 = top → bottom. Radial: `{ "type": "radial", "stops": [[0, "#ffd166"], [1, "rgba(255,209,102,0)"]], "cx": 0.5, "cy": 0.5, "radius": 1 }` (centre and radius are fractions of the painted box). A radial gradient follows the box's proportions: a circle on a square box, an ellipse on a wide or tall one (half-axes = width / √2 and height / √2 × `radius`, so `radius: 1` reaches the corners) — a radial fill on a flat ellipse fades towards its top and bottom edges as well as its ends.
 
 ## Common layer fields
 

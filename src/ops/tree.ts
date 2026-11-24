@@ -59,7 +59,8 @@ export function layerDetail(l: Layer): string {
     case "fill":
       return typeof l.fill === "string" ? l.fill : `${l.fill?.type ?? "?"} gradient`;
     case "adjustment":
-      return (l.filters ?? []).map((f) => (f.type === "look" ? `look:${String(f.look)}` : f.type)).join(", ") || "(empty)";
+      // Its filters are listed in the filters column, like any layer's.
+      return l.filters?.length ? "filters the layers below" : "(empty)";
     case "group":
       return `${l.children?.length ?? 0} layers`;
     default:
@@ -108,7 +109,7 @@ export function flatLayer(l: Layer, parent: Layer | null, depth: number, index: 
   if (l.clip) out.clip = true;
   const mk = maskKind(l);
   if (mk) out.mask = l.mask && (l.mask as { enabled?: boolean }).enabled === false ? `${mk} (disabled)` : mk;
-  if (l.type !== "adjustment" && l.filters?.length) out.filters = l.filters.map((f) => (f.type === "look" ? `look:${String(f.look)}` : f.type) + (f.enabled === false ? " (off)" : ""));
+  if (l.filters?.length) out.filters = l.filters.map((f) => (f.type === "look" ? `look:${String(f.look)}` : f.type) + (f.enabled === false ? " (off)" : ""));
   if (l.effects) {
     const fx = Object.entries(l.effects).filter(([, v]) => v).map(([k]) => k);
     if (fx.length) out.effects = fx;

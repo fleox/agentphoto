@@ -515,5 +515,19 @@ function withDefaults(f: Filter): Params {
   return { ...out, ...f };
 }
 
+// How far a filter stack spreads pixels outside their footprint (output px):
+// a blur on a shape or text needs transparent room around it to fade out
+// instead of being clamped to the content box. Sequential blurs add up.
+export function filtersPad(filters: readonly (Filter | null | undefined)[] | undefined, scale: number): number {
+  let p = 0;
+  for (const f of filters ?? []) {
+    if (!f || typeof f !== "object" || f.enabled === false) continue;
+    const q = withDefaults(f);
+    if (f.type === "blur") p += num(q.radius, 6) * 1.5 * scale;
+    else if (f.type === "motionBlur") p += (num(q.distance, 20) / 2) * scale;
+  }
+  return p >= 0.5 ? Math.ceil(p) + 2 : 0;
+}
+
 // Filters that read neighbouring pixels (need the whole layer, not tiles).
 export const SPATIAL_FILTERS = new Set(FILTERS.filter((f) => f.group === "blur" || f.group === "detail" || f.id === "shadowsHighlights" || f.id === "pixelate").map((f) => f.id));

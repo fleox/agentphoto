@@ -13,7 +13,8 @@ export function Button({ variant = "subtle", size = "sm", className, ...rest }: 
       type="button"
       {...rest}
       className={clsx(
-        "inline-flex select-none items-center justify-center gap-1.5 whitespace-nowrap rounded-md font-medium transition-colors disabled:pointer-events-none disabled:opacity-40",
+        // Icons never shrink: a label too long for the button must not squeeze its icon into a dot.
+        "inline-flex select-none items-center justify-center gap-1.5 whitespace-nowrap rounded-md font-medium transition-colors disabled:pointer-events-none disabled:opacity-40 [&>svg]:shrink-0",
         size === "xs" && "h-6 px-2 text-xs",
         size === "sm" && "h-7 px-2.5 text-sm",
         size === "md" && "h-8 px-3.5 text-base",

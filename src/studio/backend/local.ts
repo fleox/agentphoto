@@ -213,6 +213,11 @@ export class LocalBackend implements Backend {
     return LIBRARY_BASE;
   }
 
+  // The browser's model cache is not inspected: the consent is remembered instead.
+  async modelCached(_model: string): Promise<boolean> {
+    return false;
+  }
+
   async templates(): Promise<TemplateInfo[]> {
     return this.templateIndex.map(({ files: _f, ...info }) => info);
   }

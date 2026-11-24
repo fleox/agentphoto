@@ -8,7 +8,7 @@ import { readLibraryIndex, readTemplatesIndex, templatePreviewFile } from "../ho
 import { NodeFs } from "../nodeFs";
 import { CliError, printResult, toCliError } from "../output";
 import { engineDir, libraryDir, readVersionInfo, studioDir } from "../paths";
-import { modelsRoute } from "../render/models";
+import { listCachedModels, modelsRoute } from "../render/models";
 import { mimeOf, readBody, sendJson, sendText, startLocalServer, type LocalServer, type Route } from "../render/server";
 import { watchProject } from "../watch";
 import type { Command } from "./types";
@@ -142,6 +142,11 @@ export async function startStudioServer(opts: { project: string | null; port?: n
           data: { version: readVersionInfo().version, project: fs ? { dir: fs.root, manifest, exists: await fs.exists("photo.json") } : null, assetBase: "/project/", libraryBase: "/__library/", engineBase: "/__engine/", modelsBase: "/__models/" },
         });
         return true;
+      }
+      if (url.pathname === "/api/models" && method === "GET") {
+        // What the CLI's model cache already holds: the Studio skips the download notice for these.
+        const models = listCachedModels().map((m) => ({ id: m.id, task: m.task, sizeMb: m.sizeMb, cached: m.cached, cachedMb: m.cachedMb }));
+        return sendJson(res, 200, { ok: true, data: { models } }), true;
       }
       if (url.pathname === "/api/catalog" && method === "GET") return sendJson(res, 200, { ok: true, data: CATALOG }), true;
       if (url.pathname === "/api/library" && method === "GET") return sendJson(res, 200, { ok: true, data: readLibraryIndex() }), true;

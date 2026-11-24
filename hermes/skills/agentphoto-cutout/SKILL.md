@@ -43,7 +43,12 @@ python3 ${HERMES_SKILL_DIR}/scripts/agentphoto.py render --project my-photo --js
 ```
 
 - Models: `rmbg-1.4` (default: products, people, animals, objects) or `--model modnet` (portraits only, soft hair). `models list` shows what is cached.
-- `data.subject` is the kept area in canvas px `{ x, y, width, height }` (null = nothing found): use it to recentre and to crop.
+- `data.subject` is the kept area in canvas px `{ x, y, width, height }` (null = nothing found): use it to recentre, rescale and crop.
+- Recentre and rescale the cut-out in one op: `fitLayer` scales the layer (uniformly) and moves it so `subject` fits `box` (canvas px), aligned on `anchor` (`center`, `bottom` = standing on a floor line, `top`, `left`…). Example on a 1600×900 canvas with a 10 % margin:
+  ```bash
+  python3 ${HERMES_SKILL_DIR}/scripts/agentphoto.py doc patch --project my-photo --json '[{"op":"fitLayer","id":"photo","subject":{"x":881,"y":306,"width":475,"height":329},"box":{"x":160,"y":90,"width":1280,"height":720},"anchor":"center"}]'
+  ```
+  Or let `remove-bg` do it: `--fit x,y,width,height --anchor bottom`. Scaling a small subject up a lot gives an `upscaled` warning in `check`: the source has too few pixels for that size.
 - `--threshold 128` gives a hard edge (products with clean outlines); the default soft alpha is best for hair and fur. `--feather 2` softens a jagged edge.
 - An empty canvas shows as transparent (white in the preview): export PNG or WebP to keep the transparency.
 
@@ -81,7 +86,7 @@ A slight blur on the new background sells the depth. The built-in CC0 photos (`a
    python3 ${HERMES_SKILL_DIR}/scripts/agentphoto.py doc patch --project my-photo --json '[{"op":"crop","x":769,"y":121,"width":700,"height":700}]'
    ```
 3. Tune the shadow so it reads as contact, not as a halo: `layer update photo --set effects.dropShadow.opacity=0.28 --set effects.dropShadow.distance=14 --set effects.dropShadow.blur=22`.
-4. Render, zoom on the edges, `check`, then export at the size the shop wants (`export --format jpeg --width 2000`, skill `agentphoto-publish`). The template `product-white` (`new shop --template product-white --image ./mug.jpg`) gives a ready backdrop and floor shadow: run `remove-bg photo` on it.
+4. Render, zoom on the edges, `check`, then export at the size the shop wants (`export --format jpeg --width 2000`, skill `agentphoto-publish`). The template `product-white` (`new shop --template product-white --image ./mug.jpg`) gives a ready backdrop and floor shadow: run `remove-bg photo` on it — the first cut-out of your photo also scales the product and stands it on the floor shadow (`data.fitted` says where; `--fit none` keeps the layer where it is).
 
 ## 4. Check and refine the edge
 

@@ -74,6 +74,23 @@ describe("studio API", () => {
     expect((await http(studio.port, "GET", "/__library/index.json")).status).toBe(200);
   });
 
+  it("tells which AI models the CLI cache already holds", async () => {
+    const prev = process.env.AGENTPHOTO_MODELS;
+    const cache = join(root, "models");
+    mkdirSync(join(cache, "Xenova", "modnet", "onnx"), { recursive: true });
+    writeFileSync(join(cache, "Xenova", "modnet", "onnx", "model.onnx"), "x");
+    process.env.AGENTPHOTO_MODELS = cache;
+    try {
+      const r = JSON.parse((await http(studio.port, "GET", "/api/models")).body);
+      expect(r.ok).toBe(true);
+      expect(r.data.models.find((m: { id: string }) => m.id === "modnet")).toMatchObject({ cached: true, task: "background-removal" });
+      expect(r.data.models.find((m: { id: string }) => m.id === "rmbg-1.4")).toMatchObject({ cached: false });
+    } finally {
+      if (prev === undefined) delete process.env.AGENTPHOTO_MODELS;
+      else process.env.AGENTPHOTO_MODELS = prev;
+    }
+  });
+
   it("reads, writes, lists and deletes project files", async () => {
     expect((await http(studio.port, "PUT", "/api/project/assets/edits/a.txt", { body: "hello" })).status).toBe(200);
     const got = await http(studio.port, "GET", "/api/project/assets/edits/a.txt");

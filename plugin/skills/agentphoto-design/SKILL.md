@@ -39,7 +39,7 @@ npx -y @fleox/agentphoto@0.1.0 layer update kicker --set text="TESTED" --set bac
 npx -y @fleox/agentphoto@0.1.0 doc patch --project thumb --json '[{"op":"set","path":"canvas.background","value":{"type":"linear","angle":20,"stops":["#04131f","#0b5d7a","#00e0a4"]}}]'
 ```
 
-Templates described as "cut-out" (`youtube-thumbnail`, `avatar-pro`, `product-white`) look right only once the subject is cut out: run `remove-bg photo` (skill `agentphoto-cutout`), then render.
+Templates described as "cut-out" (`youtube-thumbnail`, `avatar-pro`, `product-white`) look right only once the subject is cut out: run `remove-bg photo` (skill `agentphoto-cutout`), then render. On `product-white` the first cut-out of the user's photo also scales and places the product on the floor shadow; elsewhere, recentre a subject with the `fitLayer` patch op if it sits badly.
 
 ## 3. Or start from a size preset
 

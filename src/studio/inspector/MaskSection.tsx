@@ -115,12 +115,12 @@ export function MaskSection({ layer }: { layer: Layer }) {
           <div className="flex gap-1">
             <Select value={model} options={bgModels.map((x) => ({ value: x.id, label: `${x.id} · ${x.sizeMb} MB` }))} onChange={setModel} ariaLabel={t("mask.model")} />
           </div>
-          <div className="grid grid-cols-2 gap-1">
-            <Button size="xs" variant="subtle" disabled={!!busy} onClick={() => void removeBackground(api, layer.id, model)}>
-              <Wand2 size={12} /> {t("ai.removeBg")}
+          <div className="grid grid-cols-1 gap-1">
+            <Button size="xs" variant="subtle" className="min-w-0" title={t("ai.removeBg")} disabled={!!busy} onClick={() => void removeBackground(api, layer.id, model)}>
+              <Wand2 size={12} /> <span className="truncate">{t("ai.removeBg")}</span>
             </Button>
-            <Button size="xs" variant="subtle" disabled={!!busy} onClick={() => void selectSubject(api, layer.id, model)}>
-              <ScanFace size={12} /> {t("ai.selectSubject")}
+            <Button size="xs" variant="subtle" className="min-w-0" title={t("ai.selectSubject")} disabled={!!busy} onClick={() => void selectSubject(api, layer.id, model)}>
+              <ScanFace size={12} /> <span className="truncate">{t("ai.selectSubject")}</span>
             </Button>
           </div>
           <p className="text-2xs leading-snug text-fg-faint">{t("mask.aiNote")}</p>

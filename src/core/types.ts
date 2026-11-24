@@ -56,8 +56,9 @@ export interface LinearGradient {
 export interface RadialGradient {
   type: "radial";
   stops: (ColorStop | string)[];
-  // Centre and radius as fractions of the painted box (0..1; radius of the
-  // half-diagonal). Default: centred, radius 1.
+  // Centre and radius as fractions of the painted box (0..1; radius 1 reaches
+  // the corners). Elliptical on non-square boxes (half-axes w/√2 and h/√2 ×
+  // radius), a circle on square ones. Default: centred, radius 1.
   cx?: number;
   cy?: number;
   radius?: number;

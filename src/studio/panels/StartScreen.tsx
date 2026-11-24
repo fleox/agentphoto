@@ -318,7 +318,7 @@ function TemplateDialog({ tp, preview, onClose, onUse }: { tp: TemplateInfo; pre
       }
     >
       <div className="space-y-3 p-4">
-        <div className="overflow-hidden rounded-lg bg-ink-2">
+        <div className="flex h-80 items-center justify-center overflow-hidden rounded-lg bg-ink-2">
           <TemplatePreview src={preview} />
         </div>
         <p className="text-sm text-fg-muted">{tp.description}</p>
@@ -337,7 +337,8 @@ function TemplateDialog({ tp, preview, onClose, onUse }: { tp: TemplateInfo; pre
   );
 }
 
+// Shown whole (letterboxed): a template's text and layout must not be cropped.
 function TemplatePreview({ src }: { src: string | null }) {
   const [failed, setFailed] = useState(!src);
-  return failed || !src ? <div className="h-full w-full bg-gradient-to-br from-ink-3 to-ink-1" /> : <img src={src} alt="" className="h-full w-full object-cover" onError={() => setFailed(true)} />;
+  return failed || !src ? <div className="h-full w-full bg-gradient-to-br from-ink-3 to-ink-1" /> : <img src={src} alt="" className="h-full w-full object-contain" onError={() => setFailed(true)} />;
 }

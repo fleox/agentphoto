@@ -48,8 +48,9 @@ export interface EngineHost {
   backgroundMask(doc: PhotoDoc, id: string, opts: { model?: string; feather?: number; threshold?: number }): Promise<EncodedImage>;
   segmentMask(doc: PhotoDoc, id: string, prompt: SegmentPrompt, opts: { model?: string; feather?: number }): Promise<EncodedImage>;
   colorRangeMask(doc: PhotoDoc, id: string, opts: { color: string; tolerance?: number; feather?: number }): Promise<EncodedImage>;
-  // Measured layer boxes (text with real font metrics), document px.
-  layerBoxes?(doc: PhotoDoc): Promise<Record<string, { x: number; y: number; width: number; height: number; rotation: number }>>;
+  // Measured layer boxes (text with real font metrics), document px. `ink`
+  // (text layers): the area its lines and background actually paint.
+  layerBoxes?(doc: PhotoDoc): Promise<Record<string, { x: number; y: number; width: number; height: number; rotation: number; ink?: { x: number; y: number; width: number; height: number } }>>;
 }
 
 export interface ToolHost {

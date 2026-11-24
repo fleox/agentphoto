@@ -121,7 +121,14 @@ export function Editor({ backend, onClose }: { backend: Backend; onClose(): void
     const askConsent = (model: string) =>
       new Promise<boolean>((resolve) => {
         if (hasConsent(model)) return resolve(true);
-        ui.set({ consent: { model, resolve: (ok) => (ui.set({ consent: null }), resolve(ok)) } });
+        // Already in the CLI's cache: nothing to download, nothing to ask.
+        void backend
+          .modelCached(model)
+          .catch(() => false)
+          .then((cached) => {
+            if (cached) return resolve(true);
+            ui.set({ consent: { model, resolve: (ok) => (ui.set({ consent: null }), resolve(ok)) } });
+          });
       });
 
     let toolList: ToolInfo[] = [];

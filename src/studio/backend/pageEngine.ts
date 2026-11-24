@@ -29,7 +29,7 @@ export function pageEngineHost(engine: Engine): EngineHost {
     segmentMask: (doc, id, prompt, opts) => engine.segmentMask(doc, id, prompt, opts),
     colorRangeMask: (doc, id, opts) => engine.colorRangeMask(doc, id, opts),
     async layerBoxes(doc) {
-      const out: Record<string, { x: number; y: number; width: number; height: number; rotation: number }> = {};
+      const out: Record<string, { x: number; y: number; width: number; height: number; rotation: number; ink?: { x: number; y: number; width: number; height: number } }> = {};
       const list: Parameters<Parameters<typeof walkLayers>[1]>[0][] = [];
       walkLayers(doc.layers, (l) => void list.push(l));
       for (const l of list) {

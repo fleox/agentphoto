@@ -770,7 +770,7 @@ export const en = {
     agentTitle: "Let your agent drive",
     agentBody: "Claude Code, Claude or any MCP client edits the same project with the agentphoto tools and looks at the renders. Changes show up here live.",
     privacyTitle: "Private by design",
-    privacyBody: "No server, no account: photos stay on this computer. Only AI models are downloaded, once, after you agree.",
+    privacyBody: "No server, no account: photos stay on this computer. Only AI models are downloaded, once, after you agree. The optional assistant sends Claude the previews it renders.",
   },
 };
 
