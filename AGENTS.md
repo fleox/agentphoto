@@ -23,7 +23,7 @@ Read `CLAUDE.md` first (architecture, hard rules, contracts). This file lists wh
 - `plugin/skills/` is the single source of the agent skills: `agentphoto-retouch` (core: open, analyze, correct, looks, portrait, geometry, text, check, export), `agentphoto-cutout` (background removal, masks), `agentphoto-design` (templates, size presets, typography, layout), `agentphoto-publish` (export formats, sizes, variants, web weight, the Studio). When a CLI command, option, output field, error code or default changes, update every skill / reference that mentions it **in the same change**.
 - `npm run check:skills` (after the build) fails when a skill calls a command, action or **option** missing from `help --json`, pins another version than `package.json`, uses non-portable frontmatter, contains non-English prose, links to a missing file, has an invalid ```json block, contains a full document example (`"version"` + `"layers"`) that fails `agentphoto doc validate` (errors or warnings), or when README / docs pin another version.
 - Skills are 100% English; agents translate for the user at runtime.
-- Commands in skills are always pinned: `npx -y @fleox/agentphoto@0.1.0 <command> --json` (rewritten by `scripts/sync-version.mjs`).
+- Commands in skills are always pinned: `npx -y @fleox/agentphoto@0.1.1 <command> --json` (rewritten by `scripts/sync-version.mjs`).
 - Every command written in a skill must have been run for real, in order, on a scratch project. Every document in `agentphoto-retouch/references/recipes.md` was validated, applied, checked and rendered: re-render the recipes after engine changes that affect looks (filters, looks, text, effects, compositing) and update them if they no longer look right.
 
 ## Hermes is generated

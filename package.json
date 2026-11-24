@@ -1,6 +1,6 @@
 {
   "name": "@fleox/agentphoto",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "type": "module",
   "description": "The photo studio your AI agent can run: retouch, layers, masks, background removal, subject cutout, filters and looks as a non-destructive JSON document, previewed headless and exported as PNG / JPEG / WebP. With a Studio to finish by hand. No server, no account.",
   "license": "SEE LICENSE IN LICENSE",

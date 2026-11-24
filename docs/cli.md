@@ -1,7 +1,7 @@
 # The `agentphoto` CLI
 
 ```bash
-npx -y @fleox/agentphoto@0.1.0 help
+npx -y @fleox/agentphoto@0.1.1 help
 npm install -g @fleox/agentphoto      # or install it: the binary is `agentphoto`
 ```
 
@@ -32,12 +32,12 @@ Node.js 22+ is required. Renders, exports, `analyze` and the AI commands (`remov
 ## Typical session
 
 ```bash
-npx -y @fleox/agentphoto@0.1.0 new trip --image ./lake.jpg --json
-npx -y @fleox/agentphoto@0.1.0 analyze --project trip --json
-npx -y @fleox/agentphoto@0.1.0 filter add photo --type shadowsHighlights --set shadows=30 --project trip --json
-npx -y @fleox/agentphoto@0.1.0 render --project trip --compare --json      # → renders/preview-before.png + preview.png
-npx -y @fleox/agentphoto@0.1.0 check --project trip --json
-npx -y @fleox/agentphoto@0.1.0 export --project trip --format webp --quality 82 --json
+npx -y @fleox/agentphoto@0.1.1 new trip --image ./lake.jpg --json
+npx -y @fleox/agentphoto@0.1.1 analyze --project trip --json
+npx -y @fleox/agentphoto@0.1.1 filter add photo --type shadowsHighlights --set shadows=30 --project trip --json
+npx -y @fleox/agentphoto@0.1.1 render --project trip --compare --json      # → renders/preview-before.png + preview.png
+npx -y @fleox/agentphoto@0.1.1 check --project trip --json
+npx -y @fleox/agentphoto@0.1.1 export --project trip --format webp --quality 82 --json
 ```
 
 Outputs: `render` writes `renders/preview.png` (and `preview-before.png` with `--compare`) and prints the paths; `export` writes into `dist/` (`dist/<name>[-<preset>|-<w>x<h>].<ext>`) and prints each file with its size in px and KB.

@@ -1,7 +1,7 @@
 ---
 name: agentphoto-retouch
 description: "Retouch a photo with AgentPhoto - open the user's photo as a non-destructive project, measure it (analyze), fix light and colour (exposure, levels, curves, white balance, shadows / highlights, vibrance), apply looks (film, cinema, B&W, golden hour...), retouch portraits (skin smoothing masked to the face, clarity, eyes), crop / straighten / resize, add text, shapes and layer effects, then render and LOOK at the result, check and export. Use when the user wants to edit, enhance, correct, grade, crop or retouch a photo or image file, or change an existing AgentPhoto project (photo.json)."
-version: 0.1.0
+version: 0.1.1
 author: AgentPhoto
 license: PolyForm-Noncommercial-1.0.0
 platforms: [macos, linux, windows]

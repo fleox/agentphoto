@@ -3,7 +3,7 @@
 The Studio is AgentPhoto's visual editor: a React app (`src/studio/`, built to `dist/studio/`) with a canvas viewport, a tool rail (move / transform, marquee, lasso and polygonal lasso, magic wand, quick AI select, crop, brush, eraser, clone stamp, text, shapes, hand, zoom, eyedropper), a layers panel, an inspector (properties, filters with live parameters and a curve editor, looks, layer effects, masks, canvas settings), AI dialogs (background removal, masks), an export dialog, the templates gallery on the start screen and an optional AI assistant. It previews with the same engine that renders headless for the agent, so what you see is what exports.
 
 ```bash
-npx -y @fleox/agentphoto@0.1.0 studio --project my-photo
+npx -y @fleox/agentphoto@0.1.1 studio --project my-photo
 ```
 
 `agentphoto studio` serves the Studio on `http://127.0.0.1:4330/` (next free port; `--port`, `--no-open`) with a local REST API over the project folder (contract: [studio-api.md](studio-api.md)). Edits go through the same AI tool catalog as the CLI and the MCP server, so validation is identical. Changes made by another program (an agent in a terminal, a text editor) are pushed to the open Studio and appear live: you can watch your agent work, then take over by hand.

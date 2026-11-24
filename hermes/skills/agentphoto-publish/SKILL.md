@@ -1,7 +1,7 @@
 ---
 name: agentphoto-publish
 description: "Export and deliver AgentPhoto images - run the pre-export check, pick the format (PNG, JPEG, WebP; transparency), quality and size (presets for Open Graph, Instagram, stories, YouTube, Pinterest, banners, or exact width / height / scale, cover or contain), export several variants at once, keep files light for the web, name and place outputs, and open the Studio so the user can finish by hand. Use when the user wants to save, export, download, resize for a platform, compress or optimise an image made with AgentPhoto, needs several sizes, or wants to edit it visually themselves."
-version: 0.1.0
+version: 0.1.1
 author: AgentPhoto
 license: PolyForm-Noncommercial-1.0.0
 platforms: [macos, linux, windows]

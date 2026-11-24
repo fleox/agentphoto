@@ -4,7 +4,7 @@ description: Export and deliver AgentPhoto images - run the pre-export check, pi
 license: PolyForm-Noncommercial-1.0.0
 compatibility: Requires Node.js 22+ and Google Chrome (or Chromium/Edge/Brave) for exports and the Studio.
 metadata:
-  version: "0.1.0"
+  version: "0.1.1"
   repository: "https://github.com/fleox/agentphoto"
 allowed-tools: Bash Read Write
 ---
@@ -13,13 +13,13 @@ allowed-tools: Bash Read Write
 
 **Language:** talk to the user in their language; keep commands, ids and files in English.
 
-Every command is `npx -y @fleox/agentphoto@0.1.0 <command> --json` with `--project <dir>`. Read `error.hint` when `ok` is false.
+Every command is `npx -y @fleox/agentphoto@0.1.1 <command> --json` with `--project <dir>`. Read `error.hint` when `ok` is false.
 
 ## 1. Check first
 
 ```bash
-npx -y @fleox/agentphoto@0.1.0 check --project my-photo --json
-npx -y @fleox/agentphoto@0.1.0 render --project my-photo --json
+npx -y @fleox/agentphoto@0.1.1 check --project my-photo --json
+npx -y @fleox/agentphoto@0.1.1 render --project my-photo --json
 ```
 
 `check` exits 1 when there are errors (missing files, invalid document). Fix warnings too: `upscaled` (the photo is stretched beyond its resolution: it will look soft; use a smaller output or a larger source), `off-canvas` (a layer is outside the picture), `text-may-overflow` (look at the render). `licences` lists the files whose licence needs a credit: tell the user. Look at the final render once more before exporting.
@@ -27,9 +27,9 @@ npx -y @fleox/agentphoto@0.1.0 render --project my-photo --json
 ## 2. Export
 
 ```bash
-npx -y @fleox/agentphoto@0.1.0 export --project my-photo --json
-npx -y @fleox/agentphoto@0.1.0 export --project my-photo --format jpeg --quality 85 --width 1600 --json
-npx -y @fleox/agentphoto@0.1.0 export --project my-photo --format webp --quality 80 --out dist/web/hero.webp --json
+npx -y @fleox/agentphoto@0.1.1 export --project my-photo --json
+npx -y @fleox/agentphoto@0.1.1 export --project my-photo --format jpeg --quality 85 --width 1600 --json
+npx -y @fleox/agentphoto@0.1.1 export --project my-photo --format webp --quality 80 --out dist/web/hero.webp --json
 ```
 
 Files go to `<project>/dist/` (`dist/<name>[-<preset or size>].<ext>`; `--name` sets the base name, `--out` an exact path inside the project). The result lists each file with `width`, `height` and `kb`: report them to the user with the absolute `file` path. Exporting over an existing file prints `needsConfirmation` with the plan: ask, then re-run with `--yes`.
@@ -45,12 +45,12 @@ JPEG has no alpha: transparent areas are flattened on white, or on `--background
 
 ## 3. Sizes and variants
 
-`--preset` picks a platform size (`npx -y @fleox/agentphoto@0.1.0 catalog sizes --json`): `og` 1200×630, `square` 1080×1080, `portrait` 1080×1350, `story` 1080×1920, `landscape` 1920×1080, `youtube` 1280×720, `twitter` 1600×900, `pinterest` 1000×1500, `banner` 1920×600, `linkedin-banner` 1584×396, `avatar` 800×800, `product` 2000×2000, `a4` 1240×1754. Or `--width` / `--height` (the other side keeps the aspect) or `--scale 2` (retina).
+`--preset` picks a platform size (`npx -y @fleox/agentphoto@0.1.1 catalog sizes --json`): `og` 1200×630, `square` 1080×1080, `portrait` 1080×1350, `story` 1080×1920, `landscape` 1920×1080, `youtube` 1280×720, `twitter` 1600×900, `pinterest` 1000×1500, `banner` 1920×600, `linkedin-banner` 1584×396, `avatar` 800×800, `product` 2000×2000, `a4` 1240×1754. Or `--width` / `--height` (the other side keeps the aspect) or `--scale 2` (retina).
 
 When the output aspect differs from the canvas, `--fit cover` (default) crops the centre and `--fit contain` pads with `--background`. Several outputs in one call:
 
 ```bash
-npx -y @fleox/agentphoto@0.1.0 export --project my-photo --variants '[{"preset":"og","format":"jpeg","quality":85},{"preset":"square","format":"webp","fit":"contain","background":"#0f172a"},{"preset":"twitter","format":"jpeg"}]' --json
+npx -y @fleox/agentphoto@0.1.1 export --project my-photo --variants '[{"preset":"og","format":"jpeg","quality":85},{"preset":"square","format":"webp","fit":"contain","background":"#0f172a"},{"preset":"twitter","format":"jpeg"}]' --json
 ```
 
 Read the variants whose aspect changed (a landscape design cropped to `story` loses its sides): if a crop cuts text or a face, design that format separately (copy the project, change the canvas with `doc patch` `resizeCanvas`, move the layers; skill `agentphoto-design`) instead of relying on `cover`.
@@ -67,7 +67,7 @@ Read the variants whose aspect changed (a landscape design cropped to `story` lo
 The Studio is a visual editor (canvas, layers, inspector, filters and looks, masks, AI cut-out, export, an optional assistant) that edits the **same project folder** through a local server on 127.0.0.1. Changes made by the agent in a terminal appear live in it, and changes the user makes are saved to `photo.json`.
 
 ```bash
-npx -y @fleox/agentphoto@0.1.0 studio --project my-photo --json
+npx -y @fleox/agentphoto@0.1.1 studio --project my-photo --json
 ```
 
 It runs until stopped: start it in the background (or ask the user to run it in their own terminal), give them the `url` it prints, and stop it when they are done. `--no-open` doesn't open a browser, `--port <n>` picks the port. After they edit, run `doc summary` before changing anything: the document may have new layers (painted edits are files in `assets/edits/`).

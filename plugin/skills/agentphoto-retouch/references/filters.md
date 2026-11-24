@@ -1,6 +1,6 @@
 # Filters cheat-sheet
 
-The catalog is the source of truth: `npx -y @fleox/agentphoto@0.1.0 catalog filters --json` lists every filter with its parameters (type, range, default) and an example; `npx -y @fleox/agentphoto@0.1.0 catalog filters shadowsHighlights --json` shows one. Unknown ids or parameters fail validation with a "did you mean" hint.
+The catalog is the source of truth: `npx -y @fleox/agentphoto@0.1.1 catalog filters --json` lists every filter with its parameters (type, range, default) and an example; `npx -y @fleox/agentphoto@0.1.1 catalog filters shadowsHighlights --json` shows one. Unknown ids or parameters fail validation with a "did you mean" hint.
 
 A filter is `{ "type": "<id>", ...params }` plus two common parameters: `amount` (0..1, blend with the unfiltered pixels, default 1) and `enabled` (false = kept but skipped). On an image / text / shape layer it changes that layer; on an **adjustment layer** it changes everything below it (inside its group).
 

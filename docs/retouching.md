@@ -2,7 +2,7 @@
 
 Four everyday jobs, step by step, with the commands an agent runs (you can run them yourself). Every step was run for real on the built-in sample photos; the images below are the actual renders. In a chat with an agent, just describe the result you want: the skills follow these recipes.
 
-Prefix every command with `npx -y @fleox/agentphoto@0.1.0` (or install the package and use `agentphoto`). Add `--json` for machine-readable output.
+Prefix every command with `npx -y @fleox/agentphoto@0.1.1` (or install the package and use `agentphoto`). Add `--json` for machine-readable output.
 
 ## Colour correction
 
