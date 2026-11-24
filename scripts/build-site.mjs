@@ -69,13 +69,15 @@ writeFileSync(join(out, "404.html"), notFoundPage());
 
 // Crawlers and GitHub Pages.
 const today = new Date().toISOString().slice(0, 10);
-const urls = ["/", ...Object.values(LANGS).map((c) => c.path)];
+const guides = Object.values(LANGS);
+const alternates = [...guides.map((c) => [c.lang, c.path]), ["x-default", LANGS.en.path]]
+  .map(([l, p]) => `\n    <xhtml:link rel="alternate" hreflang="${l}" href="${SITE_URL}${p}"/>`)
+  .join("");
+const entries = [`  <url><loc>${SITE_URL}/</loc><lastmod>${today}</lastmod></url>`, ...guides.map((c) => `  <url><loc>${SITE_URL}${c.path}</loc><lastmod>${today}</lastmod>${alternates}\n  </url>`)];
 writeFileSync(join(out, "robots.txt"), `User-agent: *\nAllow: /\n\nSitemap: ${SITE_URL}/sitemap.xml\n`);
 writeFileSync(
   join(out, "sitemap.xml"),
-  `<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n${urls
-    .map((u) => `  <url><loc>${SITE_URL}${u}</loc><lastmod>${today}</lastmod></url>`)
-    .join("\n")}\n</urlset>\n`,
+  `<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9" xmlns:xhtml="http://www.w3.org/1999/xhtml">\n${entries.join("\n")}\n</urlset>\n`,
 );
 writeFileSync(join(out, "CNAME"), `${new URL(SITE_URL).host}\n`);
 writeFileSync(join(out, ".nojekyll"), "");
