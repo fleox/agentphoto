@@ -161,7 +161,9 @@ export const moveTool: ToolDef = {
       const l = findLayer(doc.layers, hit)?.layer;
       if (l?.type === "text") {
         api.store.select(hit);
-        api.ui.set({ textEdit: { id: hit } });
+        // Touch: the text field in Properties (the drawer on a phone), where a
+        // tap opens the keyboard; the inline editor needs a hardware keyboard focus.
+        api.ui.set(p.touch ? { rightTab: "properties", sheet: true } : { textEdit: { id: hit } });
         return null;
       }
     }

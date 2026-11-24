@@ -12,6 +12,7 @@ import { IconButton, Select } from "../components/ui/controls";
 import { SliderField } from "../components/ui/NumberField";
 import { useI18n } from "../i18n";
 import { blendTitle } from "../lib/labels";
+import { tapTracker } from "../lib/touch";
 import { defaultName, insertPosition, layerLabel, layerRows, moveOps, newId, shapeLayer, type DropWhere } from "../lib/layers";
 import { LayerThumb, MaskThumb } from "../render/thumbs";
 import { useEditor, useSnapshot, useUi } from "../state/context";
@@ -40,6 +41,7 @@ export function LayersPanel() {
   const sel = snap.selection;
   const primary = sel.length ? findLayer(doc.layers, sel[sel.length - 1])?.layer : undefined;
   const [renaming, setRenaming] = useState<string | null>(null);
+  const tap = useRef(tapTracker());
   const [menu, setMenu] = useState<{ x: number; y: number; id: string } | null>(null);
   const [drop, setDrop] = useState<{ id: string; where: DropWhere } | null>(null);
   const dragIds = useRef<string[]>([]);
@@ -172,6 +174,10 @@ export function LayersPanel() {
               onDrop={onDrop}
               onClick={(e) => onRowClick(e, l.id)}
               onDoubleClick={() => (l.type === "text" ? (setTool(api, "move"), ui.set({ textEdit: { id: l.id } })) : undefined)}
+              onPointerUp={(e) => {
+                // Touch: double tap a text layer → its text field in Properties.
+                if (l.type === "text" && tap.current(`row:${l.id}`, e)) ui.set({ rightTab: "properties" });
+              }}
               onContextMenu={(e) => {
                 e.preventDefault();
                 if (!sel.includes(l.id)) store.select(l.id);
@@ -248,7 +254,13 @@ export function LayersPanel() {
                     className="field h-6"
                   />
                 ) : (
-                  <div onDoubleClick={(e) => (e.stopPropagation(), setRenaming(l.id))} className={clsx("truncate text-sm", hidden ? "text-fg-faint" : "text-fg")} title={`${layerLabel(l)} · ${l.id}`}>
+                  <div
+                    onDoubleClick={(e) => (e.stopPropagation(), setRenaming(l.id))}
+                    onPointerUp={(e) => {
+                      // Touch: double tap the name to rename.
+                      if (tap.current(`name:${l.id}`, e)) (e.stopPropagation(), setRenaming(l.id));
+                    }}
+                    className={clsx("truncate text-sm", hidden ? "text-fg-faint" : "text-fg")} title={`${layerLabel(l)} · ${l.id}`}>
                     {layerLabel(l)}
                   </div>
                 )}
@@ -264,7 +276,7 @@ export function LayersPanel() {
                 type="button"
                 aria-label={l.locked ? t("layers.unlock") : t("layers.lock")}
                 onClick={(e) => (e.stopPropagation(), set(l.id, { locked: l.locked ? null : true }))}
-                className={clsx("flex h-6 w-5 shrink-0 items-center justify-center rounded", l.locked ? "text-fg-muted" : "text-fg-faint opacity-0 hover:text-fg group-hover:opacity-100")}
+                className={clsx("flex h-6 w-5 shrink-0 items-center justify-center rounded", l.locked ? "text-fg-muted" : "text-fg-faint opacity-0 hover:text-fg group-hover:opacity-100 [@media(hover:none)]:opacity-100")}
               >
                 {l.locked ? <Lock size={12} /> : <LockOpen size={12} />}
               </button>

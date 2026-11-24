@@ -260,7 +260,7 @@ export function StartScreen({ backend, onOpened }: { backend: Backend; onOpened(
                       </div>
                     </button>
                     {backend.remove && (
-                      <button type="button" aria-label={t("start.remove")} title={t("start.remove")} onClick={async () => (await backend.remove!(r.id), setRecent(await backend.recent()))} className="rounded p-1 text-fg-faint opacity-0 hover:text-danger group-hover:opacity-100">
+                      <button type="button" aria-label={t("start.remove")} title={t("start.remove")} onClick={async () => (await backend.remove!(r.id), setRecent(await backend.recent()))} className="rounded p-1 text-fg-faint opacity-0 hover:text-danger group-hover:opacity-100 [@media(hover:none)]:opacity-100">
                         <Trash2 size={12} />
                       </button>
                     )}

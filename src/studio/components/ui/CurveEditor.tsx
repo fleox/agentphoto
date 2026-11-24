@@ -3,6 +3,7 @@
 // [input, output] 0..255; the curve is drawn with the engine's own LUT.
 
 import { useRef, useState } from "react";
+import { tapTracker } from "../../lib/touch";
 import { curveLut } from "../../../engine/filters/pixels";
 import { t } from "../../i18n";
 
@@ -17,6 +18,7 @@ const sy = (v: number) => pad + (1 - v / 255) * inner;
 export function CurveEditor({ points, onChange, color = "rgb(var(--fg))" }: { points: CurvePoints; onChange(p: CurvePoints, final: boolean): void; color?: string }) {
   const ref = useRef<SVGSVGElement>(null);
   const drag = useRef<{ i: number; out: boolean } | null>(null);
+  const tap = useRef(tapTracker());
   const [active, setActive] = useState<number | null>(null);
   const pts = points.length >= 2 ? points : ([[0, 0], [255, 255]] as CurvePoints);
   const lut = curveLut(pts);
@@ -97,6 +99,10 @@ export function CurveEditor({ points, onChange, color = "rgb(var(--fg))" }: { po
             (e.currentTarget.ownerSVGElement as Element).setPointerCapture(e.pointerId);
           }}
           onDoubleClick={() => i > 0 && i < pts.length - 1 && onChange(pts.filter((_, k) => k !== i), true)}
+          onPointerUp={(e) => {
+            // Touch: double tap removes an inner point.
+            if (tap.current(`pt:${i}`, e) && i > 0 && i < pts.length - 1) onChange(pts.filter((_, k) => k !== i), true);
+          }}
         />
       ))}
     </svg>

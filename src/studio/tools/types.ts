@@ -25,6 +25,8 @@ export interface PointerInfo {
   mod: boolean;
   button: number;
   clicks: number;
+  // A finger (touch screen), not a mouse or a pen.
+  touch?: boolean;
 }
 
 export interface ToolCtx {

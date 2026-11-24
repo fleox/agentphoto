@@ -132,7 +132,7 @@ export function Row({ label, children, hint, onReset, overridden, align = "cente
       <div className="flex min-w-0 items-center gap-1">{children}</div>
       <div className="flex justify-end">
         {onReset && overridden && (
-          <button type="button" title={t("ui.reset")} aria-label={t("ui.reset")} onClick={onReset} className="text-fg-faint opacity-0 transition-opacity hover:text-fg group-hover:opacity-100">
+          <button type="button" title={t("ui.reset")} aria-label={t("ui.reset")} onClick={onReset} className="text-fg-faint opacity-0 transition-opacity hover:text-fg group-hover:opacity-100 [@media(hover:none)]:opacity-100">
             <RotateCcw size={11} />
           </button>
         )}

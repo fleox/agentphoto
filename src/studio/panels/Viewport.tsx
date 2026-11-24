@@ -24,7 +24,7 @@ import { handlesFor, rotationHandle } from "../tools/move";
 import { toolById } from "../tools/registry";
 import type { DragSession, PaintOverlay, PointerInfo, Pt, ToolCtx } from "../tools/types";
 import { panSession, zoomAt } from "../tools/view";
-import { pinchView } from "../lib/touch";
+import { pinchView, tapTracker } from "../lib/touch";
 import { TextEditor } from "./TextEditor";
 
 const GUIDE = "rgb(255 79 216)";
@@ -91,6 +91,7 @@ export function Viewport() {
   // Touch: fingers on the viewport (screen px) and the two-finger pinch / pan.
   const touches = useRef(new Map<number, Pt>());
   const pinch = useRef<{ ids: [number, number]; a0: Pt; b0: Pt; start: View } | null>(null);
+  const tap = useRef(tapTracker());
   const space = useRef(false);
   const dpr = typeof window !== "undefined" ? window.devicePixelRatio || 1 : 1;
 
@@ -297,6 +298,10 @@ export function Viewport() {
       return;
     }
     const p = info(e);
+    if (e.pointerType === "touch") {
+      p.touch = true;
+      if (tap.current("canvas", e)) p.clicks = 2;
+    }
     const def = toolById(ui.get().tool);
     let s: DragSession | null | undefined;
     if (e.button === 1 || space.current || def.id === "hand") s = panSession(ctx, p);

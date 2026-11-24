@@ -44,3 +44,33 @@ export function pinchView(start: View, a0: Pt, b0: Pt, a: Pt, b: Pt): View {
   const docY = (c0.y - start.y) / start.zoom;
   return { zoom, x: c.x - docX * zoom, y: c.y - docY * zoom };
 }
+
+// Double tap on touch screens: Safari does not reliably send dblclick (nor a
+// click count in `detail`), so two taps on the same target, close in time and
+// place, are detected here. Mouse events are left to dblclick / `detail`.
+export const DOUBLE_TAP_MS = 350;
+export const DOUBLE_TAP_PX = 24;
+
+export interface Tap {
+  key: string;
+  t: number;
+  x: number;
+  y: number;
+}
+
+export function isDoubleTap(last: Tap | null, next: Tap): boolean {
+  return !!last && last.key === next.key && next.t - last.t <= DOUBLE_TAP_MS && Math.hypot(next.x - last.x, next.y - last.y) <= DOUBLE_TAP_PX;
+}
+
+// One tracker per component (keep it in a ref): call it on pointerdown / up
+// with a key naming the target; true on the second tap of a double tap.
+export function tapTracker(): (key: string, e: { pointerType: string; clientX: number; clientY: number; timeStamp: number }) => boolean {
+  let last: Tap | null = null;
+  return (key, e) => {
+    if (e.pointerType === "mouse") return false;
+    const next = { key, t: e.timeStamp, x: e.clientX, y: e.clientY };
+    const double = isDoubleTap(last, next);
+    last = double ? null : next;
+    return double;
+  };
+}
