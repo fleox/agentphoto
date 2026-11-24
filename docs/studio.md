@@ -37,6 +37,8 @@ Background removal and Segment Anything masks run in the page (ONNX models throu
 
 ## Static hosting and links from an agent
 
+The Studio is online at [www.photo-touch-up.fr](https://www.photo-touch-up.fr/) in this mode, with a guide in English and French ([site/README.md](../site/README.md) builds and deploys it).
+
 The npm package's `dist/` is a static site as it is: `dist/index.html` opens `studio/index.html`, and ONNX Runtime is in `engine/ort/`. Served that way (no CLI), the Studio runs in local mode: projects in the browser, engine in the page. An agent platform that serves it next to its chat can give links that open the agent's work in it:
 
 - `studio/index.html#import=<ref>` imports `<ref>` as a new browser project, then replaces the link with `?project=<id>` (a reload does not import twice; the same bundle opens the same stored project, with the person's edits). `<ref>` is an image or a **project bundle**, on the page's own origin.

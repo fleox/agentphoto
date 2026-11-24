@@ -1,0 +1,54 @@
+name: Site
+
+# Builds the public site www.photo-touch-up.fr (the Studio in local mode + the
+# guide pages, site/README.md) and pushes it to the GitHub Pages repository
+# fleox/photo-touch-up.fr, which holds only the built files. Runs on every
+# release tag (with Release) and by hand (Actions → Site → Run workflow).
+# Needs the secret SITE_DEPLOY_KEY: the private half of a deploy key with
+# write access on fleox/photo-touch-up.fr.
+
+on:
+  push:
+    tags: ["v*"]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: site
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - run: npm run typecheck
+      - run: npx vitest run scripts/site.test.ts src/studio
+      - run: npm run build:site
+      - uses: actions/checkout@v4
+        with:
+          repository: fleox/photo-touch-up.fr
+          ssh-key: ${{ secrets.SITE_DEPLOY_KEY }}
+          path: pages
+      - name: Replace the published files
+        run: |
+          find pages -mindepth 1 -maxdepth 1 ! -name .git -exec rm -rf {} +
+          cp -R dist/site/. pages/
+          cd pages
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add -A
+          if git diff --cached --quiet; then
+            echo "Nothing changed."
+            exit 0
+          fi
+          version="$(node -p "require('../package.json').version")"
+          git commit -m "AgentPhoto ${version} (${GITHUB_SHA::7})"
+          git push origin HEAD

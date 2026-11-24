@@ -19,6 +19,16 @@ Apart from those assistant previews, your photos are never sent anywhere in thes
 
 The same holds for any AI agent you connect yourself (Claude Code, an MCP client): AgentPhoto runs locally and only returns renders to that agent (`render_preview` images, file paths); what the agent then sends to its model provider is up to the agent and its settings.
 
+## The online Studio (www.photo-touch-up.fr)
+
+The public site is the Studio as static files (GitHub Pages, built from this repository by `.github/workflows/site.yml`, see [site/README.md](../site/README.md)). It works like the Studio without the CLI:
+
+- Photos and projects are stored in the browser (IndexedDB) and never sent anywhere: editing, AI and exports run in the page. Exports are downloaded files.
+- The site serves the editor's files only; it has no API, no account, no analytics and no third-party scripts or fonts.
+- AI models download once from `huggingface.co` into the browser's cache, after a notice naming the model, its size and its licence.
+- The optional assistant behaves as above (your key in the browser's `localStorage`, previews to `api.anthropic.com`).
+- Clearing the site's data in the browser deletes the projects.
+
 ## Local servers
 
 `agentphoto studio` and the headless render server bind **127.0.0.1 only**. The Studio API rejects requests whose `Host` is not `127.0.0.1:<port>`, `localhost:<port>` or `[::1]:<port>`, or whose `Origin` is another site (403): this blocks DNS rebinding and cross-site requests from other web pages. Project paths are relative; `..`, absolute paths and symlinks leaving the project folder are refused. Contract: [studio-api.md](studio-api.md).

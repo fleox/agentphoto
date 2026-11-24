@@ -10,6 +10,8 @@ The package is published to npm as [`@fleox/agentphoto`](https://www.npmjs.com/p
 4. `npm version patch|minor|major`. The `version` script syncs everything that repeats the version (`scripts/sync-version.mjs`: plugin.json, skills' `metadata.version`, every pinned `@fleox/agentphoto@x.y.z` in skills, docs and READMEs), builds, regenerates `hermes/skills` and `docs/cli.md`, and stages them in the version commit.
 5. Push the commit and the tag: `git push && git push --tags`. The **Release** workflow (`.github/workflows/release.yml`) runs every check, smoke-tests the packed tarball, publishes to npm with provenance through **npm trusted publishing** (OIDC: no npm token is stored in GitHub) and creates the GitHub Release from the `changelog.json` entry. It is idempotent: a version already on npm is skipped.
 
+The same tag runs the **Site** workflow (`.github/workflows/site.yml`): it builds the online Studio and its guide and pushes them to the GitHub Pages repository `fleox/photo-touch-up.fr` (www.photo-touch-up.fr). Run it by hand (Actions → Site → Run workflow) to publish a guide fix between releases. See [site/README.md](../site/README.md).
+
 Every push to `main` and every pull request also runs the **CI** workflow (`.github/workflows/ci.yml`): typecheck, build, tests, skills, Hermes, CLI docs, library index, CLI smoke test, `npm pack --dry-run`.
 
 ### One-time setup

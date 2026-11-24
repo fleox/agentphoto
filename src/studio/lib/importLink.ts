@@ -7,6 +7,8 @@
 // index.html, or at the root of a hosted dist/):
 //   importUrl:           "/api/v1/sessions/{session}/workspace/raw?path={path}"
 //   sessionFromReferrer: "/s/([^/?#]+)"   (the conversation the link came from)
+// A public site hosting the Studio can also set guideUrl: { en, fr } (a
+// "Guide" link on the start screen).
 // {session} comes from #session=<id>, else from the referrer.
 //
 // A project travels as one JSON bundle (agentphoto bundle, see docs/studio.md):
@@ -17,6 +19,7 @@ export interface StudioConfig {
   importUrl?: string;
   sessionFromReferrer?: string;
   ortBase?: string;
+  guideUrl?: { en?: string; fr?: string };
 }
 
 export interface ProjectBundle {

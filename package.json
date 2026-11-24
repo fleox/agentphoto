@@ -31,6 +31,7 @@
     "build:studio": "STUDIO_NO_ORT=1 vite build",
     "build:studio:standalone": "vite build",
     "build:agent": "vite build --config vite.agent.config.ts",
+    "build:site": "vite build && node scripts/build-site.mjs",
     "build": "npm run build:engine && npm run build:studio && npm run build:agent && node scripts/write-version.mjs",
     "check:skills": "node scripts/check-skills.mjs",
     "docs:cli": "node scripts/build-cli-docs.mjs",

@@ -2,7 +2,7 @@
 // blank canvases from the size presets, templates (CLI), recent projects.
 
 import clsx from "clsx";
-import { ArrowRight, Cloud, FolderOpen, HardDrive, ImagePlus, Loader2, Terminal, Trash2, Upload } from "lucide-react";
+import { ArrowRight, BookOpen, Cloud, ExternalLink, FolderOpen, HardDrive, ImagePlus, Loader2, Terminal, Trash2, Upload } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import { SIZE_PRESETS } from "../../core/catalog";
 import type { LibraryAsset } from "../../core/library";
@@ -10,9 +10,12 @@ import type { TemplateInfo } from "../../ops/templates";
 import type { Backend, CreateOptions, ProjectRef } from "../backend/types";
 import { useI18n } from "../i18n";
 import { Dialog } from "../components/ui/Dialog";
+import { loadConfig } from "../lib/importLink";
 import { sizeTitle } from "../lib/labels";
 import { Logo } from "./TopBar";
 import { readFiles } from "./Viewport";
+
+const REPO_URL = "https://github.com/fleox/agentphoto";
 
 function Aspect({ w, h, max = 46 }: { w: number; h: number; max?: number }) {
   const k = max / Math.max(w, h);
@@ -29,6 +32,11 @@ export function StartScreen({ backend, onOpened }: { backend: Backend; onOpened(
   const [drag, setDrag] = useState(false);
   const [pick, setPick] = useState<TemplateInfo | null>(null);
   const input = useRef<HTMLInputElement>(null);
+  const [guideUrl, setGuideUrl] = useState<string | null>(null);
+
+  useEffect(() => {
+    void loadConfig().then((c) => setGuideUrl(c.guideUrl?.[lang] ?? c.guideUrl?.en ?? null));
+  }, [lang]);
 
   useEffect(() => {
     void backend.templates().then(setTemplates);
@@ -79,6 +87,11 @@ export function StartScreen({ backend, onOpened }: { backend: Backend; onOpened(
               {backend.mode === "cli" ? <HardDrive size={12} /> : <Cloud size={12} />}
               {backend.mode === "cli" ? t("start.cliMode", { v: backend.version ?? "" }) : t("start.localMode")}
             </div>
+            {guideUrl && (
+              <a href={guideUrl} className="flex h-8 items-center gap-1.5 rounded-md px-2.5 text-xs font-medium text-fg-muted hover:bg-ink-3 hover:text-fg">
+                <BookOpen size={13} /> {t("start.guide")}
+              </a>
+            )}
             <button type="button" onClick={() => setLang(lang === "en" ? "fr" : "en")} title={t("top.language")} className="h-8 rounded-md px-2 text-xs font-semibold text-fg-muted hover:bg-ink-3 hover:text-fg">
               {lang.toUpperCase()}
             </button>
@@ -261,6 +274,9 @@ export function StartScreen({ backend, onOpened }: { backend: Backend; onOpened(
               <div className="mb-1 font-medium text-fg">{t("start.agentTitle")}</div>
               {t("start.agentBody")}
               <pre className="mt-2 overflow-x-auto rounded bg-ink-0 px-2 py-1.5 font-mono text-2xs text-fg">agentphoto mcp</pre>
+              <a href={REPO_URL} target="_blank" rel="noreferrer" className="mt-2.5 inline-flex items-center gap-1 font-medium text-accent hover:underline">
+                {t("start.agentLink")} <ExternalLink size={11} />
+              </a>
             </div>
             <div className="mt-3 rounded-lg border border-line p-3.5 text-xs leading-relaxed text-fg-muted">
               <div className="mb-1 font-medium text-fg">{t("start.privacyTitle")}</div>

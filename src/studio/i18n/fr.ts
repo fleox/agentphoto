@@ -776,6 +776,8 @@ export const fr: Messages = {
     noRecent: "Aucun projet récent.",
     otherFolder: "{dir} — relancez `agentphoto studio --project` sur ce dossier pour l'ouvrir",
     remove: "Retirer",
+    guide: "Guide",
+    agentLink: "La version pour agents sur GitHub",
     agentTitle: "Laissez votre agent piloter",
     agentBody: "Claude Code, Claude ou tout client MCP modifie le même projet avec les outils agentphoto et regarde les rendus. Les changements s'affichent ici en direct.",
     privacyTitle: "Confidentiel par conception",

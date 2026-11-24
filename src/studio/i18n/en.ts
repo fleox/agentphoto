@@ -774,6 +774,8 @@ export const en = {
     noRecent: "No recent project yet.",
     otherFolder: "{dir} — restart `agentphoto studio --project` there to open it",
     remove: "Remove",
+    guide: "Guide",
+    agentLink: "Get the agent version on GitHub",
     agentTitle: "Let your agent drive",
     agentBody: "Claude Code, Claude or any MCP client edits the same project with the agentphoto tools and looks at the renders. Changes show up here live.",
     privacyTitle: "Private by design",

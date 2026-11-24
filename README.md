@@ -20,6 +20,7 @@
 </p>
 
 <p align="center">
+  <a href="https://www.photo-touch-up.fr/">Try it online</a> ·
   <a href="#quick-start">Quick start</a> ·
   <a href="#features">Features</a> ·
   <a href="#the-studio">Studio</a> ·
@@ -161,6 +162,8 @@ Step by step: [docs/getting-started.md](https://github.com/fleox/agentphoto/blob
 
 A visual editor for when you want to see and touch the picture yourself, on the same files and with the same validated tools as the agent. Changes your agent makes in a terminal appear live in the open Studio.
 
+**Try it in your browser at [www.photo-touch-up.fr](https://www.photo-touch-up.fr/)** ([guide](https://www.photo-touch-up.fr/guide/)): the same Studio as static files, nothing to install. Projects stay in your browser, the engine and the AI run in the page, nothing is uploaded.
+
 ```bash
 npx -y @fleox/agentphoto@0.1.2 studio --project trip
 ```
@@ -295,6 +298,7 @@ claude mcp add agentphoto -- npx -y @fleox/agentphoto@0.1.2 mcp --project ~/Pict
 - **Local.** Projects are folders on your disk; editing, previews, analysis, AI and exports run on your computer, in Node.js and your own browser engine.
 - **AgentPhoto uploads nothing.** The AI models come to the photos: they download **once** from Hugging Face into `~/.cache/agentphoto/models` and then run offline.
 - **Nothing else phones home.** No account, no telemetry, no update check, no CDN, no web fonts. The only other network uses are importing an image from a URL you give, and the optional Studio assistant (your own Claude API key, to `api.anthropic.com`; it sends the previews its tools render).
+- **The online Studio** ([www.photo-touch-up.fr](https://www.photo-touch-up.fr/)) is static files: projects are stored in your browser and edited, cut out and exported in the page; nothing is uploaded.
 - **Your agent is yours.** An agent you connect (Claude Code, an MCP client) receives the renders it asks for and handles them under its own settings.
 - **Non-destructive.** Source files are copied, never modified; AI masks are new files.
 
