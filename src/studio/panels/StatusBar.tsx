@@ -18,7 +18,7 @@ export function StatusBar() {
   const b = sel ? boxes.get(sel) : undefined;
   const issues = snap.issues.filter((i) => i.severity === "error");
   return (
-    <footer className="flex h-6 shrink-0 items-center gap-4 border-t border-line bg-ink-1 px-3 text-2xs tabular-nums text-fg-faint">
+    <footer className="hidden h-6 shrink-0 md:flex items-center gap-4 border-t border-line bg-ink-1 px-3 text-2xs tabular-nums text-fg-faint">
       <span className="flex items-center gap-1" title={t("status.canvas")}>
         <Maximize2 size={10} /> {doc.canvas.width} × {doc.canvas.height} px
       </span>

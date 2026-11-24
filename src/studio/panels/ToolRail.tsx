@@ -34,7 +34,7 @@ export function ToolRail() {
   const [flyout, setFlyout] = useState(false);
   const groups = ["select", "draw", "paint", "view"] as const;
   return (
-    <nav aria-label={t("tools.title")} className="flex w-11 shrink-0 flex-col items-center gap-0.5 border-r border-line bg-ink-1 py-2">
+    <nav aria-label={t("tools.title")} className="flex w-11 shrink-0 flex-col items-center gap-0.5 border-r border-line bg-ink-1 py-2 max-md:overflow-y-auto">
       {groups.map((g, gi) => (
         <div key={g} className={clsx("flex flex-col items-center gap-0.5", gi > 0 && "mt-1.5 border-t border-line pt-1.5")}>
           {TOOLS.filter((x) => x.group === g).map((def) => {

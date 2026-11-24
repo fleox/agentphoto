@@ -176,7 +176,7 @@ export function ExportDialog() {
         </>
       }
     >
-      <div className="grid grid-cols-[minmax(0,1fr)_320px]">
+      <div className="grid md:grid-cols-[minmax(0,1fr)_320px]">
         <div className="flex min-h-[420px] flex-col border-r border-line bg-ink-0/50 p-4">
           <div className="relative flex flex-1 items-center justify-center overflow-hidden rounded-lg bg-ink-0">
             {enc ? <img src={enc.url} alt={t("export.previewAlt")} className="checker max-h-[440px] max-w-full object-contain shadow-lg shadow-black/50" /> : <Loader2 size={18} className="animate-spin text-fg-faint" />}

@@ -39,7 +39,7 @@ export function RightPanel() {
     effects: layer?.effects ? Object.values(layer.effects).filter(Boolean).length || undefined : undefined,
   };
   return (
-    <aside ref={col} className="flex w-[312px] shrink-0 flex-col border-l border-line bg-ink-1">
+    <aside ref={col} className="flex w-[312px] max-w-[88vw] shrink-0 flex-col border-l border-line bg-ink-1">
       <div className="flex min-h-[120px] flex-col" style={{ height: h }}>
         <LayersPanel />
       </div>

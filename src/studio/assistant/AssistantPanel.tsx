@@ -194,7 +194,7 @@ export function AssistantPanel() {
   const hasKey = !!apiKey;
 
   return (
-    <aside className="flex w-[360px] shrink-0 flex-col border-l border-line bg-ink-1" aria-label={t("assistant.title")}>
+    <aside className="flex w-[360px] max-w-[92vw] shrink-0 flex-col border-l border-line bg-ink-1" aria-label={t("assistant.title")}>
       <div className="flex h-10 shrink-0 items-center gap-1.5 border-b border-line pl-3 pr-1.5">
         <Bot size={15} className="text-agent" />
         <span className="text-sm font-semibold">{t("assistant.title")}</span>

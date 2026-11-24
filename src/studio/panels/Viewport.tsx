@@ -24,6 +24,7 @@ import { handlesFor, rotationHandle } from "../tools/move";
 import { toolById } from "../tools/registry";
 import type { DragSession, PaintOverlay, PointerInfo, Pt, ToolCtx } from "../tools/types";
 import { panSession, zoomAt } from "../tools/view";
+import { pinchView } from "../lib/touch";
 import { TextEditor } from "./TextEditor";
 
 const GUIDE = "rgb(255 79 216)";
@@ -87,6 +88,9 @@ export function Viewport() {
   const [size, setSize] = useState({ w: 0, h: 0 });
   const [ready, setReady] = useState(false);
   const session = useRef<DragSession | null>(null);
+  // Touch: fingers on the viewport (screen px) and the two-finger pinch / pan.
+  const touches = useRef(new Map<number, Pt>());
+  const pinch = useRef<{ ids: [number, number]; a0: Pt; b0: Pt; start: View } | null>(null);
   const space = useRef(false);
   const dpr = typeof window !== "undefined" ? window.devicePixelRatio || 1 : 1;
 
@@ -271,6 +275,21 @@ export function Viewport() {
   // ─── pointer → tools ───────────────────────────────────────────────────
   const onPointerDown = (e: React.PointerEvent) => {
     if (e.button === 2) return;
+    if (e.pointerType === "touch") {
+      touches.current.set(e.pointerId, info(e).screen);
+      if (touches.current.size >= 2) {
+        // A second finger: stop the tool (its drag is cancelled) and pinch / pan the view.
+        if (!pinch.current) {
+          session.current?.cancel?.();
+          session.current = null;
+          const [[ia, a0], [ib, b0]] = [...touches.current].slice(0, 2);
+          pinch.current = { ids: [ia, ib], a0, b0, start: ui.get().view };
+        }
+        (e.currentTarget as HTMLElement).setPointerCapture(e.pointerId);
+        e.preventDefault();
+        return;
+      }
+    }
     if (ui.get().textEdit) {
       // A click outside the inline editor commits the text.
       (document.activeElement as HTMLElement | null)?.blur?.();
@@ -291,6 +310,16 @@ export function Viewport() {
   };
   const onPointerMove = (e: React.PointerEvent) => {
     const p = info(e);
+    if (e.pointerType === "touch" && touches.current.has(e.pointerId)) {
+      touches.current.set(e.pointerId, p.screen);
+      const pc = pinch.current;
+      if (pc) {
+        const a = touches.current.get(pc.ids[0]);
+        const b = touches.current.get(pc.ids[1]);
+        if (a && b) ui.set({ view: pinchView(pc.start, pc.a0, pc.b0, a, b) });
+        return;
+      }
+    }
     ui.set({ cursor: { x: Math.floor(p.doc.x), y: Math.floor(p.doc.y) } });
     pointerDoc.current = p.doc;
     moveBrushCursor(p.screen);
@@ -314,6 +343,13 @@ export function Viewport() {
     el.style.display = "block";
   };
   const end = (e: React.PointerEvent, cancel = false) => {
+    if (e.pointerType === "touch") {
+      touches.current.delete(e.pointerId);
+      if (pinch.current) {
+        if (!touches.current.size) pinch.current = null;
+        return;
+      }
+    }
     const s = session.current;
     session.current = null;
     if (!s) return;
@@ -353,7 +389,7 @@ export function Viewport() {
       data-viewport
       tabIndex={-1}
       className={clsx("viewport-stage relative min-h-0 flex-1 overflow-hidden outline-none", dragOver && "ring-2 ring-inset ring-accent/60")}
-      style={{ cursor }}
+      style={{ cursor, touchAction: "none" }}
       onPointerDown={onPointerDown}
       onMouseDown={(e) => {
         // Keep the focus where it is (inline text editor, panels): the viewport is not a focus target.

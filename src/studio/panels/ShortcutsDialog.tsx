@@ -43,7 +43,7 @@ export function ShortcutsDialog() {
   const { ui } = useEditor();
   return (
     <Dialog title={t("keys.title")} width={760} onClose={() => ui.set({ dialog: null })}>
-      <div className="grid grid-cols-3 gap-x-6 px-4 py-2">
+      <div className="grid gap-x-6 px-4 py-2 sm:grid-cols-3">
         <div>
           <div className="pb-1 pt-1.5 text-2xs font-semibold uppercase tracking-wide text-fg-faint">{t("keys.tools")}</div>
           <Rows rows={TOOLS.map((x) => [[x.shortcut], x.label] as [string[], MessageKey])} />

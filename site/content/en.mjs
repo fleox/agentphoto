@@ -46,7 +46,7 @@ export default {
   steps: {
     title: "Your first edit in three steps.",
     items: [
-      ["Open the editor", "No install: it runs in Chrome, Edge, Firefox or Safari on a computer."],
+      ["Open the editor", "No install: it runs in Chrome, Edge, Firefox or Safari, on a computer, a tablet or a phone."],
       ["Drop your photo", "Or start from a sample photo, a social size or a template. It becomes a project saved in your browser."],
       ["Edit and export", "Adjust, cut out, add text, then Export: the file is saved to your Downloads."],
     ],
@@ -86,7 +86,7 @@ export default {
       ["How does background removal work without a server?", "The model runs in the page with WebAssembly. RMBG-1.4 (168 MB) is the default; MODNet (25 MB) is made for portraits. Both download once and stay in your browser's cache."],
       ["Can I use it for commercial work?", "Fonts and sample photos are free for commercial images. The default background-removal model, RMBG-1.4, is licensed for non-commercial use only: for commercial work use MODNet (people) or Segment Anything selections. AgentPhoto itself is licensed under PolyForm Noncommercial 1.0.0; commercial use of the software needs the author's authorization."],
       ["Which formats can I open and export?", "Open JPEG, PNG, WebP and the other images your browser can read. Export PNG, JPEG, WebP and AVIF (AVIF where the browser can encode it)."],
-      ["Does it work on a phone?", "The editor is designed for a computer screen with a mouse or trackpad. Use a recent Chrome, Edge, Firefox or Safari."],
+      ["Does it work on a phone?", "Yes: on a phone or a tablet the layers and the inspector open in a drawer, and you zoom and pan with two fingers. Detailed work (selections, painting) is more comfortable on a computer. Use a recent Chrome, Edge, Firefox or Safari."],
       ["What happened to Photo Touch-Up?", "Photo Touch-Up, the editor that used to live at this address, became AgentPhoto: a new engine with non-destructive layers, local AI and templates, which AI agents can also drive."],
     ],
   },

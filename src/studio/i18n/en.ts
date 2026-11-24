@@ -19,6 +19,7 @@ export const en = {
     reset: "Reset to default",
   },
   top: {
+    panels: "Layers and properties",
     projects: "Start screen",
     inBrowser: "In this browser",
     undo: "Undo",

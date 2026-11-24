@@ -86,6 +86,8 @@ export interface UiState {
   rightTab: RightTab;
   assistant: boolean;
   panelsHidden: boolean;
+  // Narrow screens: the layers / inspector drawer is open.
+  sheet: boolean;
   dialog: DialogId;
   flash: { ids: string[]; at: number } | null;
   agentPulse: number;

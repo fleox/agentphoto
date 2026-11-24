@@ -1,5 +1,5 @@
 import clsx from "clsx";
-import { Bot, ChevronDown, ChevronLeft, CircleAlert, Cloud, HardDrive, Keyboard, Loader2, Maximize, Minus, Plus, Redo2, ShieldCheck, Undo2, Upload } from "lucide-react";
+import { Bot, ChevronDown, ChevronLeft, CircleAlert, Cloud, HardDrive, Keyboard, Loader2, Maximize, Minus, Plus, Redo2, ShieldCheck, SlidersHorizontal, Undo2, Upload } from "lucide-react";
 import { useId } from "react";
 import { Button, IconButton } from "../components/ui/controls";
 import { Popover } from "../components/ui/Popover";
@@ -16,6 +16,7 @@ export function TopBar() {
   const { store, ui, backend, closeProject, runCheck } = api;
   const snap = useSnapshot();
   const assistant = useUi((s) => s.assistant);
+  const sheet = useUi((s) => s.sheet);
   const check = useUi((s) => s.check);
   const checkRunning = useUi((s) => s.checkRunning);
   const pulse = useUi((s) => s.agentPulse);
@@ -23,15 +24,15 @@ export function TopBar() {
   const checkCount = check ? (check.counts?.errors ?? 0) + (check.counts?.warnings ?? 0) : errors;
 
   return (
-    <header className="flex h-11 shrink-0 items-center gap-2 border-b border-line bg-ink-1 px-2">
-      <div className="flex min-w-0 items-center gap-1.5" style={{ width: 300 }}>
+    <header className="flex h-11 shrink-0 items-center gap-1 border-b sm:gap-2 border-line bg-ink-1 px-2">
+      <div className="flex min-w-0 flex-1 items-center gap-1.5 md:w-[300px] md:flex-none">
         <IconButton label={t("top.projects")} onClick={closeProject}>
           <ChevronLeft size={15} />
         </IconButton>
-        <Logo key={pulse} className={pulse ? "agent-pulse rounded-[6px]" : undefined} />
+        <Logo key={pulse} className={clsx("max-sm:hidden", pulse && "agent-pulse rounded-[6px]")} />
         <div className="min-w-0">
           <div className="truncate text-sm font-semibold leading-tight">{snap.doc?.title || backend.projectTitle()}</div>
-          <div className="flex items-center gap-1 truncate text-2xs text-fg-faint" title={backend.location ?? ""}>
+          <div className="flex items-center gap-1 truncate text-2xs text-fg-faint max-sm:hidden" title={backend.location ?? ""}>
             {backend.mode === "cli" ? <HardDrive size={10} /> : <Cloud size={10} />}
             <span className="truncate">{backend.mode === "cli" ? shortPath(backend.location) : t("top.inBrowser")}</span>
             {snap.doc && (
@@ -53,28 +54,31 @@ export function TopBar() {
         <SaveChip />
       </div>
 
-      <div className="mx-auto flex items-center">
+      <div className="mx-auto flex items-center max-sm:hidden">
         <ZoomControl />
       </div>
 
       <div className="flex items-center gap-1">
         <Button variant="ghost" onClick={() => void runCheck()} title={t("top.checkHint")}>
           {checkRunning ? <Loader2 size={14} className="animate-spin" /> : <ShieldCheck size={14} />}
-          {t("top.check")}
+          <span className="max-md:hidden">{t("top.check")}</span>
           {checkCount > 0 && <span className={clsx("rounded px-1 text-2xs font-semibold", (check?.counts?.errors ?? errors) > 0 ? "bg-danger/20 text-danger" : "bg-warn/20 text-warn")}>{checkCount}</span>}
         </Button>
         <Button variant="primary" onClick={() => ui.set({ dialog: "export" })}>
           <Upload size={14} />
-          {t("top.export")}
+          <span className="max-sm:hidden">{t("top.export")}</span>
         </Button>
-        <div className="mx-1 h-5 w-px bg-line" />
+        <IconButton label={t("top.panels")} active={sheet} onClick={() => ui.set({ sheet: !sheet, assistant: false })} className="md:hidden">
+          <SlidersHorizontal size={16} />
+        </IconButton>
+        <div className="mx-1 h-5 w-px bg-line max-md:hidden" />
         <IconButton label={t("top.assistant")} active={assistant} onClick={() => ui.set({ assistant: !assistant })}>
           <Bot size={16} />
         </IconButton>
-        <IconButton label={t("top.shortcuts")} shortcut="?" onClick={() => ui.set({ dialog: "shortcuts" })}>
+        <IconButton label={t("top.shortcuts")} shortcut="?" onClick={() => ui.set({ dialog: "shortcuts" })} className="max-md:hidden">
           <Keyboard size={15} />
         </IconButton>
-        <button type="button" onClick={() => setLang(lang === "en" ? "fr" : "en")} title={t("top.language")} className="h-7 rounded-md px-1.5 text-2xs font-semibold text-fg-muted hover:bg-ink-3 hover:text-fg">
+        <button type="button" onClick={() => setLang(lang === "en" ? "fr" : "en")} title={t("top.language")} className="h-7 rounded-md max-md:hidden px-1.5 text-2xs font-semibold text-fg-muted hover:bg-ink-3 hover:text-fg">
           {lang.toUpperCase()}
         </button>
       </div>
@@ -167,7 +171,7 @@ function SaveChip() {
   return (
     <div className={clsx("ml-1 flex h-6 items-center gap-1 rounded-md px-1.5 text-2xs", s.state === "error" ? "bg-danger/15 text-danger" : "text-fg-faint")} title={s.state === "error" ? `${s.message ?? ""}\n${t("save.errorHint")}` : label}>
       {s.state === "error" ? <CircleAlert size={11} /> : <span className={clsx("h-1.5 w-1.5 rounded-full", s.state === "saved" ? "bg-agent/70" : "animate-pulse bg-key")} />}
-      {label}
+      <span className="max-md:hidden">{label}</span>
     </div>
   );
 }

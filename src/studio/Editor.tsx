@@ -16,6 +16,7 @@ import { Toaster, toast } from "./components/ui/Toast";
 import { t } from "./i18n";
 import { bytesToDataUrl } from "./lib/download";
 import { imageLayer } from "./lib/layers";
+import { useNarrow } from "./lib/touch";
 import { urlParam } from "./lib/urlState";
 import { AiConsentDialog, BusyOverlay, hasConsent } from "./panels/AiDialogs";
 import { ExportDialog } from "./panels/ExportDialog";
@@ -27,7 +28,7 @@ import { ToolRail } from "./panels/ToolRail";
 import { TopBar } from "./panels/TopBar";
 import { Viewport } from "./panels/Viewport";
 import { BoxTracker } from "./render/boxes";
-import { EditorContext, useUi, type EditorApi, type RightTab, type UiState } from "./state/context";
+import { EditorContext, useEditor, useUi, type EditorApi, type RightTab, type UiState } from "./state/context";
 import { EditorStore, type MutationResult } from "./state/editorStore";
 import { createStore } from "./state/tinyStore";
 import { useShortcuts } from "./state/shortcuts";
@@ -47,6 +48,7 @@ function initialUi(): UiState {
     rightTab: (["properties", "filters", "looks", "effects"].includes(panel ?? "") ? panel : "properties") as RightTab,
     assistant: urlParam("assistant") === "1",
     panelsHidden: false,
+    sheet: false,
     dialog: dialog === "export" || dialog === "shortcuts" ? dialog : null,
     flash: null,
     agentPulse: 0,
@@ -289,6 +291,9 @@ function Shell() {
   const assistant = useUi((s) => s.assistant);
   const dialog = useUi((s) => s.dialog);
   const hidden = useUi((s) => s.panelsHidden);
+  const sheet = useUi((s) => s.sheet);
+  const narrow = useNarrow();
+  const { ui } = useEditor();
   useShortcuts();
   return (
     <div className="flex h-full flex-col">
@@ -302,9 +307,15 @@ function Shell() {
           <Toaster />
           <BusyOverlay />
         </div>
-        {!hidden && <RightPanel />}
-        {assistant && <AssistantPanel />}
+        {!hidden && !narrow && <RightPanel />}
+        {assistant && !narrow && <AssistantPanel />}
       </div>
+      {/* Narrow screens: the inspector (or the assistant) is a drawer over the canvas. */}
+      {narrow && (sheet || assistant) && (
+        <div className="fixed inset-x-0 bottom-0 top-11 z-40 flex justify-end bg-black/45" onPointerDown={(e) => e.target === e.currentTarget && ui.set({ sheet: false, assistant: false })}>
+          {assistant ? <AssistantPanel /> : <RightPanel />}
+        </div>
+      )}
       {dialog === "export" && <ExportDialog />}
       {dialog === "shortcuts" && <ShortcutsDialog />}
       <AiConsentDialog />

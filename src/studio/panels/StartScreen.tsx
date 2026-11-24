@@ -68,8 +68,8 @@ export function StartScreen({ backend, onOpened }: { backend: Backend; onOpened(
 
   return (
     <div className="h-full overflow-auto">
-      <div className="mx-auto max-w-[1240px] px-8 py-8">
-        <header className="mb-8 flex items-center justify-between gap-6">
+      <div className="mx-auto max-w-[1240px] px-4 py-5 sm:px-8 sm:py-8">
+        <header className="mb-6 flex flex-col gap-4 sm:mb-8 sm:flex-row sm:items-center sm:justify-between sm:gap-6">
           <div className="flex items-center gap-3">
             <Logo size={36} />
             <div>
@@ -77,7 +77,7 @@ export function StartScreen({ backend, onOpened }: { backend: Backend; onOpened(
               <p className="mt-0.5 max-w-xl text-sm text-fg-muted">{t("start.tagline")}</p>
             </div>
           </div>
-          <div className="flex items-center gap-2">
+          <div className="flex flex-wrap items-center gap-2">
             {backend.hasProject() && (
               <button type="button" onClick={onOpened} className="flex h-8 items-center gap-1.5 rounded-md bg-accent px-3 text-sm font-medium text-ink-0 hover:bg-accent/90">
                 {t("start.continue", { title: backend.projectTitle() })} <ArrowRight size={14} />
@@ -110,7 +110,7 @@ export function StartScreen({ backend, onOpened }: { backend: Backend; onOpened(
         )}
         {error && <div className="mb-6 rounded-md bg-danger/10 px-3 py-2 text-sm text-danger">{error}</div>}
 
-        <div className="grid grid-cols-[minmax(0,1fr)_272px] gap-10">
+        <div className="grid gap-10 lg:grid-cols-[minmax(0,1fr)_272px]">
           <div className="min-w-0 space-y-9">
             {/* Hero: open a photo */}
             <section
@@ -125,7 +125,7 @@ export function StartScreen({ backend, onOpened }: { backend: Backend; onOpened(
                 void openFiles([...e.dataTransfer.files]);
               }}
               className={clsx(
-                "relative flex items-center gap-6 overflow-hidden rounded-xl border border-dashed px-8 py-8 transition-colors",
+                "relative flex flex-col items-start gap-4 overflow-hidden rounded-xl border border-dashed px-5 py-6 transition-colors sm:flex-row sm:items-center sm:gap-6 sm:px-8 sm:py-8",
                 drag ? "border-accent bg-accent/10" : "border-line bg-ink-1",
               )}
               style={drag ? undefined : { backgroundImage: "radial-gradient(120% 140% at 0% 0%, rgb(var(--accent) / 0.16), transparent 55%), radial-gradient(90% 120% at 100% 100%, rgb(var(--agent) / 0.08), transparent 60%)" }}
@@ -159,7 +159,7 @@ export function StartScreen({ backend, onOpened }: { backend: Backend; onOpened(
                   <h2 className="text-base font-semibold">{t("start.samples")}</h2>
                   <span className="text-xs text-fg-faint">{t("start.samplesHint")}</span>
                 </div>
-                <div className="grid grid-cols-3 gap-3 xl:grid-cols-6">
+                <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 xl:grid-cols-6">
                   {samples.map((s) => (
                     <button key={s.id} type="button" disabled={!canCreate || !!busy} onClick={() => void create(`sample:${s.id}`, { title: s.title ?? s.id, libraryImage: s.id })} className="group text-left disabled:opacity-60" title={s.description}>
                       <div className="relative aspect-[4/3] overflow-hidden rounded-lg bg-ink-2 ring-1 ring-white/5 transition group-hover:ring-accent/60">
@@ -186,7 +186,7 @@ export function StartScreen({ backend, onOpened }: { backend: Backend; onOpened(
                   <h2 className="text-base font-semibold">{t("start.templates")}</h2>
                   <span className="text-xs text-fg-faint">{t("start.templatesHint")}</span>
                 </div>
-                <div className="grid grid-cols-3 gap-3 xl:grid-cols-4">
+                <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 xl:grid-cols-4">
                   {templates.map((tp) => (
                     <button key={tp.id} type="button" data-template={tp.id} disabled={!canCreate || !!busy} onClick={() => setPick(tp)} className="group text-left disabled:opacity-60" title={tp.description}>
                       <div className="relative aspect-[4/3] overflow-hidden rounded-lg bg-ink-2 ring-1 ring-white/5 transition group-hover:ring-accent/60">
@@ -213,7 +213,7 @@ export function StartScreen({ backend, onOpened }: { backend: Backend; onOpened(
                 <h2 className="text-base font-semibold">{t("start.blank")}</h2>
                 <span className="text-xs text-fg-faint">{t("start.blankHint")}</span>
               </div>
-              <div className="grid grid-cols-4 gap-2 xl:grid-cols-5">
+              <div className="grid grid-cols-3 gap-2 sm:grid-cols-4 xl:grid-cols-5">
                 {SIZE_PRESETS.map((p) => (
                   <button key={p.id} type="button" disabled={!canCreate || !!busy} onClick={() => void create(`blank:${p.id}`, { title: sizeTitle(p.id), width: p.width, height: p.height, background: "#ffffff" })} className="group flex items-center gap-3 rounded-lg border border-line bg-ink-1 p-2.5 text-left transition-colors hover:border-accent/50 hover:bg-ink-2 disabled:opacity-60" title={p.description}>
                     <div className="flex h-12 w-12 shrink-0 items-center justify-center">{busy === `blank:${p.id}` ? <Loader2 size={16} className="animate-spin" /> : <Aspect w={p.width} h={p.height} />}</div>
@@ -334,7 +334,7 @@ function TemplateDialog({ tp, preview, onClose, onUse }: { tp: TemplateInfo; pre
       }
     >
       <div className="space-y-3 p-4">
-        <div className="flex h-80 items-center justify-center overflow-hidden rounded-lg bg-ink-2">
+        <div className="flex h-56 items-center justify-center overflow-hidden rounded-lg bg-ink-2 sm:h-80">
           <TemplatePreview src={preview} />
         </div>
         <p className="text-sm text-fg-muted">{tp.description}</p>

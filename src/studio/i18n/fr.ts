@@ -21,6 +21,7 @@ export const fr: Messages = {
     reset: "Valeur par défaut",
   },
   top: {
+    panels: "Calques et propriétés",
     projects: "Accueil",
     inBrowser: "Dans ce navigateur",
     undo: "Annuler",

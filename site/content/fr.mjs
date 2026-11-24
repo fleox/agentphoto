@@ -45,7 +45,7 @@ export default {
   steps: {
     title: "Votre première retouche en trois étapes.",
     items: [
-      ["Ouvrez l'éditeur", "Rien à installer : il tourne dans Chrome, Edge, Firefox ou Safari sur un ordinateur."],
+      ["Ouvrez l'éditeur", "Rien à installer : il tourne dans Chrome, Edge, Firefox ou Safari, sur ordinateur, tablette ou téléphone."],
       ["Déposez votre photo", "Ou partez d'une photo d'exemple, d'un format social ou d'un modèle. Elle devient un projet enregistré dans votre navigateur."],
       ["Retouchez et exportez", "Réglez, détourez, ajoutez du texte, puis Exporter : le fichier arrive dans vos Téléchargements."],
     ],
@@ -85,7 +85,7 @@ export default {
       ["Comment la suppression d'arrière-plan marche-t-elle sans serveur ?", "Le modèle tourne dans la page grâce à WebAssembly. RMBG-1.4 (168 Mo) est le modèle par défaut ; MODNet (25 Mo) est fait pour les portraits. Les deux se téléchargent une fois et restent dans le cache du navigateur."],
       ["Puis-je l'utiliser pour un usage commercial ?", "Les polices et les photos d'exemple sont libres pour des images commerciales. Le modèle de suppression d'arrière-plan par défaut, RMBG-1.4, est sous licence non commerciale : pour un usage commercial, utilisez MODNet (personnes) ou les sélections Segment Anything. AgentPhoto lui-même est sous licence PolyForm Noncommercial 1.0.0 ; un usage commercial du logiciel demande l'autorisation de l'auteur."],
       ["Quels formats puis-je ouvrir et exporter ?", "Ouvrez du JPEG, du PNG, du WebP et les autres images que votre navigateur sait lire. Exportez en PNG, JPEG, WebP et AVIF (AVIF si le navigateur sait l'encoder)."],
-      ["Est-ce que ça marche sur téléphone ?", "L'éditeur est conçu pour un écran d'ordinateur avec une souris ou un pavé tactile. Utilisez un Chrome, Edge, Firefox ou Safari récent."],
+      ["Est-ce que ça marche sur téléphone ?", "Oui : sur téléphone ou tablette, les calques et l'inspecteur s'ouvrent dans un tiroir, et on zoome et se déplace à deux doigts. Le travail de précision (sélections, peinture) reste plus confortable sur ordinateur. Utilisez un Chrome, Edge, Firefox ou Safari récent."],
       ["Qu'est devenu Photo Touch-Up ?", "Photo Touch-Up, l'éditeur qui était à cette adresse, est devenu AgentPhoto : un nouveau moteur avec des calques non destructifs, de l'IA locale et des modèles, que les agents IA savent aussi piloter."],
     ],
   },
