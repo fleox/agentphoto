@@ -8,7 +8,8 @@
         "First release: the PhotoDoc format (photo.json, a non-destructive layer stack of image, text, shape, fill, adjustment and group layers with masks, filters, looks and layer effects), validated against one catalog with \"did you mean\" hints.",
         "Engine: 28 filters (light, tone, colour, blur, detail, stylize, auto), 20 looks, 5 layer effects, 16 blend modes, 15 bundled fonts, 13 size presets; headless renders in the installed Chrome.",
         "Local AI: background removal (RMBG-1.4, MODNet) and Segment Anything masks (SlimSAM, SAM base) from points or a box, plus colour-range masks; models download once into ~/.cache/agentphoto/models.",
-        "CLI `agentphoto` (JSON output with hints, plans before destructive changes), MCP server (render_preview returns the image), 8 templates, CC0 sample photos, the Studio and four Claude Code skills (agentphoto-retouch, agentphoto-cutout, agentphoto-design, agentphoto-publish)."
+        "CLI `agentphoto` (JSON output with hints, plans before destructive changes), MCP server (render_preview returns the image), 8 templates, CC0 sample photos, the Studio and four Claude Code skills (agentphoto-retouch, agentphoto-cutout, agentphoto-design, agentphoto-publish).",
+        "Hermes Agent skills (hermes/skills, generated from the Claude Code skills) with a stdlib Python wrapper of the CLI (agentphoto.py) and helpers: open_photo.py, cutout.py, render_and_check.py, export_set.py."
       ],
       "actions": []
     }

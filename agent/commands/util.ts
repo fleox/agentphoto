@@ -122,12 +122,17 @@ export function parseScalar(raw: string): unknown {
   }
 }
 
+// Fields that are always strings: `--set text=2026` must stay "2026".
+const STRING_KEYS = new Set(["text", "name", "title", "id", "font", "src", "parent"]);
+
 // --set key=value (repeated) as [dotted key, parsed value] pairs.
 export function setEntries(options: Options): [string, unknown][] {
   return multiOpt(options, "set").map((pair) => {
     const i = pair.indexOf("=");
     if (i <= 0) usage(`--set expects key=value, got "${pair}".`, 'e.g. --set x=40 --set opacity=0.8 --set effects.dropShadow.blur=24 --set color="#ff3366"');
-    return [pair.slice(0, i).trim(), parseScalar(pair.slice(i + 1))];
+    const key = pair.slice(0, i).trim();
+    const raw = pair.slice(i + 1);
+    return [key, STRING_KEYS.has(key.split(".").at(-1)!) ? raw : parseScalar(raw)];
   });
 }
 

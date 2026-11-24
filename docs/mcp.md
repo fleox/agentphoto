@@ -1,6 +1,6 @@
 # MCP server
 
-`agentphoto mcp` turns a project folder into a [Model Context Protocol](https://modelcontextprotocol.io) server on stdio, so Claude Code, Claude Desktop, Cursor or any MCP client can open, retouch, cut out, preview and export images.
+`agentphoto mcp` turns a project folder into a [Model Context Protocol](https://modelcontextprotocol.io) server on stdio, so Claude Code, Claude Desktop, Hermes, Cursor or any MCP client can open, retouch, cut out, preview and export images.
 
 ```bash
 npx -y @fleox/agentphoto@0.1.0 mcp --project /path/to/my-photo [--read-only]
@@ -36,6 +36,17 @@ Add `--scope project` to share it with a repository (`.mcp.json`). The skills (`
 Desktop apps may not see your shell's `PATH`: use the absolute path of `npx` (`which npx`) as `command` if the server doesn't start. Several projects = several entries with different names and `--project`.
 
 **Cursor** — `.cursor/mcp.json` (or `~/.cursor/mcp.json`): the same `mcpServers` object as Claude Desktop.
+
+**Hermes Agent** — `~/.hermes/config.yaml`:
+
+```yaml
+mcp_servers:
+  agentphoto:
+    command: npx
+    args: ["-y", "@fleox/agentphoto@0.1.0", "mcp", "--project", "/Users/me/Pictures/agentphoto/my-photo"]
+```
+
+Or use the Hermes skills in [`hermes/`](../hermes) (Python wrapper of the CLI, no MCP needed).
 
 **Any other client**: run the command above as a stdio server (JSON-RPC 2.0; protocol versions 2025-06-18, 2025-03-26 and 2024-11-05).
 

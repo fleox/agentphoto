@@ -2,7 +2,8 @@
 // Claude Code plugin manifest, each skill's metadata.version, every pinned
 // `@fleox/agentphoto@x.y.z` command in the skills, the docs and the README.
 // Run by the npm "version" lifecycle (`npm version patch|minor|major`), so a
-// release bumps them all.
+// release bumps them all. hermes/skills is regenerated afterwards
+// (`node scripts/build-hermes.mjs`).
 
 import { existsSync, readdirSync, readFileSync, writeFileSync } from "node:fs";
 import { dirname, join, resolve } from "node:path";
@@ -35,7 +36,7 @@ for (const name of readdirSync(skillsDir)) {
   for (const file of walk(dir)) rewrite(file, true);
 }
 // Docs, README and AGENTS.md pin the same version in their snippets.
-for (const file of [join(root, "README.md"), join(root, "AGENTS.md"), ...walk(join(root, "docs"))]) {
+for (const file of [join(root, "README.md"), join(root, "AGENTS.md"), join(root, "hermes", "README.md"), ...walk(join(root, "docs"))]) {
   if (existsSync(file)) rewrite(file, false);
 }
 console.log(`[sync-version] ${version} → plugin.json + ${files} file(s)`);

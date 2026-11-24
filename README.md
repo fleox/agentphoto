@@ -67,6 +67,7 @@ Then ask in your own words (see [what you can ask](#what-you-can-ask)). The agen
 |---|---|
 | **Claude Code** | the plugin above: skills `agentphoto-retouch`, `agentphoto-cutout`, `agentphoto-design`, `agentphoto-publish` |
 | **Claude Desktop, Cursor, any MCP client** | the [MCP server](#mcp-server): `agentphoto mcp --project <dir>` |
+| **Hermes Agent** / Python agents | generated skills with a Python wrapper and helpers, see [hermes/](https://github.com/fleox/agentphoto/tree/main/hermes) |
 | **Codex, Windsurf, any other agent** | point it at [AGENTS.md](https://github.com/fleox/agentphoto/blob/main/AGENTS.md) and the Markdown skills in [plugin/skills/](https://github.com/fleox/agentphoto/tree/main/plugin/skills) |
 
 You need **Node.js 22+** and **Google Chrome** (or Chromium / Edge / Brave): previews, exports and the AI run in it, headless. `npx -y @fleox/agentphoto@0.1.0 doctor` checks your setup.
@@ -184,7 +185,7 @@ Full reference: [docs/cli.md](https://github.com/fleox/agentphoto/blob/main/docs
 claude mcp add agentphoto -- npx -y @fleox/agentphoto@0.1.0 mcp --project ~/Pictures/my-photo
 ```
 
-**Tools** are the shared AI catalog: project info and creation, document summary / get / patch / apply / validate, layers, filters, masks, `remove_background`, `mask_generate`, `image_analyze`, catalog and templates lookups, assets, `check` and `export`, plus **`render_preview`**, which returns the render as an **image** so multimodal models see their work. **Resources**: `photo://doc`, `photo://summary`, `photo://catalog`. Claude Desktop and Cursor configuration: [docs/mcp.md](https://github.com/fleox/agentphoto/blob/main/docs/mcp.md).
+**Tools** are the shared AI catalog: project info and creation, document summary / get / patch / apply / validate, layers, filters, masks, `remove_background`, `mask_generate`, `image_analyze`, catalog and templates lookups, assets, `check` and `export`, plus **`render_preview`**, which returns the render as an **image** so multimodal models see their work. **Resources**: `photo://doc`, `photo://summary`, `photo://catalog`. Claude Desktop, Cursor and Hermes configuration: [docs/mcp.md](https://github.com/fleox/agentphoto/blob/main/docs/mcp.md).
 
 ## Privacy
 

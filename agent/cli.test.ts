@@ -201,4 +201,8 @@ describe("option parsing", () => {
     expect(parseScalar("[0,1,0]")).toEqual([0, 1, 0]);
     expect(setPairs({ set: ["effects.dropShadow.blur=24", "x=40", "color=#fff"] })).toEqual({ effects: { dropShadow: { blur: 24 } }, x: 40, color: "#fff" });
   });
+
+  it("keeps text-like fields as strings", () => {
+    expect(setPairs({ set: ["text=2026", "name=true", "font=inter", "size=48"] })).toEqual({ text: "2026", name: "true", font: "inter", size: 48 });
+  });
 });

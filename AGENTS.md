@@ -26,6 +26,12 @@ Read `CLAUDE.md` first (architecture, hard rules, contracts). This file lists wh
 - Commands in skills are always pinned: `npx -y @fleox/agentphoto@0.1.0 <command> --json` (rewritten by `scripts/sync-version.mjs`).
 - Every command written in a skill must have been run for real, in order, on a scratch project. Every document in `agentphoto-retouch/references/recipes.md` was validated, applied, checked and rendered: re-render the recipes after engine changes that affect looks (filters, looks, text, effects, compositing) and update them if they no longer look right.
 
+## Hermes is generated
+
+- `hermes/skills/` is generated from `plugin/skills/` + `hermes/python/` by `npm run hermes:build` (`scripts/build-hermes.mjs`): commands become `python3 ${HERMES_SKILL_DIR}/scripts/agentphoto.py …`, a "Running the commands (Hermes)" section is inserted, the Python files are version-pinned. Never edit it by hand; regenerate and commit with the skill change.
+- `npm run check:hermes` fails when it is stale and runs the Python tests (`hermes/tests/`, fake engine, stdlib only, no Node).
+- Python helpers stay stdlib-only, Python 3.9+, print one JSON object, and take `--project` (or the new folder). A new helper: add it to `HELPERS` in `scripts/build-hermes.mjs`, describe it in its docstring's first line (it becomes the skill's helper list) and in `hermes/README.md`, and test it in `hermes/tests/test_scripts.py`. A CLI output field a helper reads (`render` → `files`, `info` → `summary.canvas`, `remove-bg` → `subject`, `export` → `files[].note`…) is a contract: change the helper and its test with it.
+
 ## CLI contract
 
 - `--json` → exactly one `{ ok, data }` or `{ ok: false, error: { code, message, hint } }` on stdout; logs on stderr. Exit 0 ok, 1 failure, 2 usage / validation.
@@ -48,4 +54,4 @@ Read `CLAUDE.md` first (architecture, hard rules, contracts). This file lists wh
 ## Tests
 
 - `npm test` (Vitest, next to the code; `scripts/*.test.ts` included) — never touches the network (inject `fetch`), never needs Chrome (render e2e tests skip without `dist/engine` / a browser).
-- `npm run typecheck`, `npm run build`, `npm run check:skills`, `node scripts/build-cli-docs.mjs --check`.
+- `npm run typecheck`, `npm run build`, `npm run check:skills`, `npm run check:hermes` (needs `python3`), `node scripts/build-cli-docs.mjs --check`.

@@ -27,4 +27,4 @@ The [README](../README.md) is the overview. These pages go into detail.
 | [architecture.md](architecture.md) | One engine, four front doors, the headless render loop, the AI models, why there is no server |
 | [studio-api.md](studio-api.md) | The Studio's local REST API (contract, owned by the CLI) |
 
-Agent skills: [`plugin/skills/`](../plugin/skills) (Claude Code plugin). Templates: [`templates/`](../templates). Built-in assets and their licences: [`library/LICENSES.md`](../library/LICENSES.md). Maintenance rules: [AGENTS.md](../AGENTS.md) and [CLAUDE.md](../CLAUDE.md).
+Agent skills: [`plugin/skills/`](../plugin/skills) (Claude Code plugin) and [`hermes/`](../hermes) (Hermes Agent, generated). Templates: [`templates/`](../templates). Built-in assets and their licences: [`library/LICENSES.md`](../library/LICENSES.md). Maintenance rules: [AGENTS.md](../AGENTS.md) and [CLAUDE.md](../CLAUDE.md).

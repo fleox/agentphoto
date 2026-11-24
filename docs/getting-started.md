@@ -21,7 +21,7 @@ npx -y @fleox/agentphoto@0.1.0 doctor
 
 The skills (`agentphoto-retouch`, `agentphoto-cutout`, `agentphoto-design`, `agentphoto-publish`) open the photo as a project, edit it, render it and **look at the render**, fix what they see, run `check` and export.
 
-**Claude Desktop, Cursor, any MCP client** — see [mcp.md](mcp.md). **Other agents** (Codex, Windsurf…): point them at [AGENTS.md](../AGENTS.md) and the Markdown skills in [`plugin/skills/`](../plugin/skills).
+**Claude Desktop, Cursor, any MCP client** — see [mcp.md](mcp.md). **Hermes Agent** skills (Python) — see [`hermes/`](../hermes). **Other agents** (Codex, Windsurf…): point them at [AGENTS.md](../AGENTS.md) and the Markdown skills in [`plugin/skills/`](../plugin/skills).
 
 ## By hand, in six commands
 

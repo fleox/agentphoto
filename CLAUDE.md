@@ -25,6 +25,7 @@ agent/       `agentphoto` CLI (Node ≥ 22, bundled to dist/agent/agentphoto.mjs
 library/     fonts/ (OFL woff2) + images/ (CC0 sample photos) + index.json + LICENSES.md
 templates/   starter projects: <id>/photo.json, template.json { id, title, description, category, tags, width, height, slot? }, preview.jpg
 plugin/      Claude Code skills (plugin/skills/<name>/SKILL.md) + .claude-plugin/plugin.json
+hermes/      Hermes Agent skills, generated from plugin/skills (+ python/ wrapper and helpers, tests/)
 docs/        user docs (catalog.md + cli.md reference generated)
 ```
 
@@ -96,6 +97,6 @@ listTemplates(index, { category?, query? });  findTemplate;  parseTemplateInfo; 
 | CLI | `agent/`, `vite.agent.config.ts`, `tsconfig.agent.json` |
 | Studio | `src/studio/`, `index.html`, `vite.config.ts`, tailwind / postcss |
 | Content | `templates/`, `library/` |
-| Distribution | `plugin/`, `.claude-plugin/`, `docs/` (except generated parts), `scripts/`, `README.md`, `AGENTS.md`, `changelog.json` |
+| Distribution | `plugin/`, `hermes/`, `.claude-plugin/`, `docs/` (except generated parts), `scripts/`, `README.md`, `AGENTS.md`, `changelog.json` |
 
 `src/core/types.ts`, `src/core/catalog.ts`, `src/ai/types.ts`, `src/engine/index.ts` are **contracts**: change them only additively and say so in your report.
