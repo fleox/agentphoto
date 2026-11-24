@@ -1,7 +1,7 @@
 ---
 name: agentphoto-design
 description: "Design social media and marketing visuals with AgentPhoto - YouTube thumbnails, Open Graph / link previews, Instagram posts and stories, Pinterest pins, web and LinkedIn banners, sale ads, quote posts, avatars and product cards - from templates or a blank canvas at the right size preset, with the user's photo, bundled fonts, text with effects, shapes, gradients and cut-out subjects, following layout rules (safe margins, contrast, hierarchy), checked on headless renders and exported in several formats at once. Use when the user wants a thumbnail, banner, post, story, cover, ad, flyer, card or any visual combining a photo with text."
-version: 0.1.1
+version: 0.1.2
 author: AgentPhoto
 license: PolyForm-Noncommercial-1.0.0
 platforms: [macos, linux, windows]

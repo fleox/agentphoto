@@ -3,7 +3,7 @@
 `agentphoto mcp` turns a project folder into a [Model Context Protocol](https://modelcontextprotocol.io) server on stdio, so Claude Code, Claude Desktop, Hermes, Cursor or any MCP client can open, retouch, cut out, preview and export images.
 
 ```bash
-npx -y @fleox/agentphoto@0.1.1 mcp --project /path/to/my-photo [--read-only]
+npx -y @fleox/agentphoto@0.1.2 mcp --project /path/to/my-photo [--read-only]
 ```
 
 - `--project` is the folder the tools work on (it may be empty: the `project_create` tool creates the project there, from a photo, a size preset and / or a template).
@@ -15,7 +15,7 @@ npx -y @fleox/agentphoto@0.1.1 mcp --project /path/to/my-photo [--read-only]
 **Claude Code**
 
 ```bash
-claude mcp add agentphoto -- npx -y @fleox/agentphoto@0.1.1 mcp --project /path/to/my-photo
+claude mcp add agentphoto -- npx -y @fleox/agentphoto@0.1.2 mcp --project /path/to/my-photo
 ```
 
 Add `--scope project` to share it with a repository (`.mcp.json`). The skills (`/plugin marketplace add fleox/agentphoto`, then `/plugin install agentphoto@agentphoto`) work with or without the MCP server: they drive the CLI.
@@ -27,7 +27,7 @@ Add `--scope project` to share it with a repository (`.mcp.json`). The skills (`
   "mcpServers": {
     "agentphoto": {
       "command": "npx",
-      "args": ["-y", "@fleox/agentphoto@0.1.1", "mcp", "--project", "/Users/me/Pictures/agentphoto/my-photo"]
+      "args": ["-y", "@fleox/agentphoto@0.1.2", "mcp", "--project", "/Users/me/Pictures/agentphoto/my-photo"]
     }
   }
 }
@@ -43,7 +43,7 @@ Desktop apps may not see your shell's `PATH`: use the absolute path of `npx` (`w
 mcp_servers:
   agentphoto:
     command: npx
-    args: ["-y", "@fleox/agentphoto@0.1.1", "mcp", "--project", "/Users/me/Pictures/agentphoto/my-photo"]
+    args: ["-y", "@fleox/agentphoto@0.1.2", "mcp", "--project", "/Users/me/Pictures/agentphoto/my-photo"]
 ```
 
 Or use the Hermes skills in [`hermes/`](../hermes) (Python wrapper of the CLI, no MCP needed).
@@ -88,4 +88,4 @@ Exactly the AI tool catalog of `src/ai/tools.ts` (`agentphoto tools list` prints
 
 ## Without MCP
 
-`agentphoto tools call <name> --input '<json>' --project <dir>` runs any tool from a shell with the same validation, e.g. `npx -y @fleox/agentphoto@0.1.1 tools call doc_summary --input '{}' --project my-photo --json`. The Studio exposes the same list over its local API (`POST /api/tools/call`, [studio-api.md](studio-api.md)).
+`agentphoto tools call <name> --input '<json>' --project <dir>` runs any tool from a shell with the same validation, e.g. `npx -y @fleox/agentphoto@0.1.2 tools call doc_summary --input '{}' --project my-photo --json`. The Studio exposes the same list over its local API (`POST /api/tools/call`, [studio-api.md](studio-api.md)).

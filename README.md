@@ -106,23 +106,23 @@ Cut-outs run locally, and the agent picks the model that fits the use:
 | **Hermes Agent** / Python agents | generated skills with a Python wrapper and helpers, see [hermes/](https://github.com/fleox/agentphoto/tree/main/hermes) |
 | **Codex, Windsurf, any other agent** | point it at [AGENTS.md](https://github.com/fleox/agentphoto/blob/main/AGENTS.md) and the Markdown skills in [plugin/skills/](https://github.com/fleox/agentphoto/tree/main/plugin/skills) |
 
-You need **Node.js 22+** and **Google Chrome** (or Chromium / Edge / Brave): previews, exports and the AI run in it, headless. `npx -y @fleox/agentphoto@0.1.1 doctor` checks your setup with a test render.
+You need **Node.js 22+** and **Google Chrome** (or Chromium / Edge / Brave): previews, exports and the AI run in it, headless. `npx -y @fleox/agentphoto@0.1.2 doctor` checks your setup with a test render.
 
 ### Without an agent
 
 ```bash
-npx -y @fleox/agentphoto@0.1.1 new trip --image ./lake.jpg
-npx -y @fleox/agentphoto@0.1.1 studio --project trip
+npx -y @fleox/agentphoto@0.1.2 new trip --image ./lake.jpg
+npx -y @fleox/agentphoto@0.1.2 studio --project trip
 ```
 
 The first command makes a project folder from your photo (add `--template <id>` to start from one of the [templates](#templates)); the second opens the [Studio](#the-studio) on it. The whole loop from a terminal:
 
 ```bash
-npx -y @fleox/agentphoto@0.1.1 analyze --project trip                    # brightness, range, colour cast… + suggested filters
-npx -y @fleox/agentphoto@0.1.1 filter add photo --type shadowsHighlights --set shadows=30 --project trip
-npx -y @fleox/agentphoto@0.1.1 remove-bg photo --background "#ffffff" --project trip
-npx -y @fleox/agentphoto@0.1.1 render --project trip --compare           # → renders/preview-before.png + preview.png
-npx -y @fleox/agentphoto@0.1.1 export --project trip --format webp --quality 82
+npx -y @fleox/agentphoto@0.1.2 analyze --project trip                    # brightness, range, colour cast… + suggested filters
+npx -y @fleox/agentphoto@0.1.2 filter add photo --type shadowsHighlights --set shadows=30 --project trip
+npx -y @fleox/agentphoto@0.1.2 remove-bg photo --background "#ffffff" --project trip
+npx -y @fleox/agentphoto@0.1.2 render --project trip --compare           # → renders/preview-before.png + preview.png
+npx -y @fleox/agentphoto@0.1.2 export --project trip --format webp --quality 82
 ```
 
 Step by step: [docs/getting-started.md](https://github.com/fleox/agentphoto/blob/main/docs/getting-started.md).
@@ -162,7 +162,7 @@ Step by step: [docs/getting-started.md](https://github.com/fleox/agentphoto/blob
 A visual editor for when you want to see and touch the picture yourself, on the same files and with the same validated tools as the agent. Changes your agent makes in a terminal appear live in the open Studio.
 
 ```bash
-npx -y @fleox/agentphoto@0.1.1 studio --project trip
+npx -y @fleox/agentphoto@0.1.2 studio --project trip
 ```
 
 <p align="center">
@@ -280,7 +280,7 @@ Full reference: [docs/cli.md](https://github.com/fleox/agentphoto/blob/main/docs
 ## MCP server
 
 ```bash
-claude mcp add agentphoto -- npx -y @fleox/agentphoto@0.1.1 mcp --project ~/Pictures/my-photo
+claude mcp add agentphoto -- npx -y @fleox/agentphoto@0.1.2 mcp --project ~/Pictures/my-photo
 ```
 
 <p align="center">

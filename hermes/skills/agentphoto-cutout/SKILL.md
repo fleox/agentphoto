@@ -1,7 +1,7 @@
 ---
 name: agentphoto-cutout
 description: "Remove the background of a photo and work with masks in AgentPhoto, with local AI (nothing is uploaded) - cut out a person, a product or a pet, put it on white, a brand colour, a gradient or another photo, recentre and resize the subject, select an object with Segment Anything points or a box, select a colour range (sky, backdrop), invert, feather and refine edges by zooming the render, blur or recolour only the background, make transparent PNG stickers with an outline. Use when the user asks to remove or replace a background, cut out / isolate / extract a subject, make a packshot or product photo on white, a transparent PNG, a sticker, or a mask."
-version: 0.1.1
+version: 0.1.2
 author: AgentPhoto
 license: PolyForm-Noncommercial-1.0.0
 platforms: [macos, linux, windows]

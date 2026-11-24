@@ -4,7 +4,7 @@ description: Design social media and marketing visuals with AgentPhoto - YouTube
 license: PolyForm-Noncommercial-1.0.0
 compatibility: Requires Node.js 22+ and Google Chrome (or Chromium/Edge/Brave) for renders.
 metadata:
-  version: "0.1.1"
+  version: "0.1.2"
   repository: "https://github.com/fleox/agentphoto"
 allowed-tools: Bash Read Write
 ---
@@ -13,7 +13,7 @@ allowed-tools: Bash Read Write
 
 **Language:** talk to the user in their language; keep commands, ids and files in English. Text that appears **in the image** is in the language the user wants on the visual.
 
-Every command is `npx -y @fleox/agentphoto@0.1.1 <command> --json` with `--project <dir>`. Read `error.hint` when `ok` is false. Basics (filters, render, patches): skill `agentphoto-retouch`; cut-outs: skill `agentphoto-cutout`.
+Every command is `npx -y @fleox/agentphoto@0.1.2 <command> --json` with `--project <dir>`. Read `error.hint` when `ok` is false. Basics (filters, render, patches): skill `agentphoto-retouch`; cut-outs: skill `agentphoto-cutout`.
 
 ## 1. Brief
 
@@ -22,10 +22,10 @@ Get, or decide and say: the **format** (where it will be posted), the **message*
 ## 2. Start from a template (fastest)
 
 ```bash
-npx -y @fleox/agentphoto@0.1.1 templates list --json
-npx -y @fleox/agentphoto@0.1.1 templates show youtube-thumbnail --json
-npx -y @fleox/agentphoto@0.1.1 new thumb --template youtube-thumbnail --image ./photo.jpg --json
-npx -y @fleox/agentphoto@0.1.1 render --project thumb --json
+npx -y @fleox/agentphoto@0.1.2 templates list --json
+npx -y @fleox/agentphoto@0.1.2 templates show youtube-thumbnail --json
+npx -y @fleox/agentphoto@0.1.2 new thumb --template youtube-thumbnail --image ./photo.jpg --json
+npx -y @fleox/agentphoto@0.1.2 render --project thumb --json
 ```
 
 The photo goes into the template's **slot** layer (`slot` in `templates list`, usually `photo`), keeping its box, fit, filters and effects. Templates: `youtube-thumbnail` (1280×720), `og-article` (1200×630), `social-quote` (1080×1080), `story-promo` (1080×1920), `sale-banner` (1920×600), `polaroid` (1080×1350), `avatar-pro` (800×800), `product-white` (2000×2000). `templates list --category social` or `--query sale` filters them.
@@ -33,10 +33,10 @@ The photo goes into the template's **slot** layer (`slot` in `templates list`, u
 Then make it the user's:
 
 ```bash
-npx -y @fleox/agentphoto@0.1.1 doc summary --project thumb --json
-npx -y @fleox/agentphoto@0.1.1 layer update title --set 'text="3 tricks\nnobody uses"' --project thumb --json
-npx -y @fleox/agentphoto@0.1.1 layer update kicker --set text="TESTED" --set background.color=#00e0a4 --project thumb --json
-npx -y @fleox/agentphoto@0.1.1 doc patch --project thumb --json '[{"op":"set","path":"canvas.background","value":{"type":"linear","angle":20,"stops":["#04131f","#0b5d7a","#00e0a4"]}}]'
+npx -y @fleox/agentphoto@0.1.2 doc summary --project thumb --json
+npx -y @fleox/agentphoto@0.1.2 layer update title --set 'text="3 tricks\nnobody uses"' --project thumb --json
+npx -y @fleox/agentphoto@0.1.2 layer update kicker --set text="TESTED" --set background.color=#00e0a4 --project thumb --json
+npx -y @fleox/agentphoto@0.1.2 doc patch --project thumb --json '[{"op":"set","path":"canvas.background","value":{"type":"linear","angle":20,"stops":["#04131f","#0b5d7a","#00e0a4"]}}]'
 ```
 
 Templates described as "cut-out" (`youtube-thumbnail`, `avatar-pro`, `product-white`) look right only once the subject is cut out: run `remove-bg photo` (skill `agentphoto-cutout`), then render. On `product-white` the first cut-out of the user's photo also scales and places the product on the floor shadow; elsewhere, recentre a subject with the `fitLayer` patch op if it sits badly.
@@ -44,22 +44,22 @@ Templates described as "cut-out" (`youtube-thumbnail`, `avatar-pro`, `product-wh
 ## 3. Or start from a size preset
 
 ```bash
-npx -y @fleox/agentphoto@0.1.1 catalog sizes --json
-npx -y @fleox/agentphoto@0.1.1 new launch --size og --background "#0f172a" --json
-npx -y @fleox/agentphoto@0.1.1 assets add ./photo.jpg --license proprietary --add-layer --layer-id photo --project launch --json
-npx -y @fleox/agentphoto@0.1.1 layer update photo --set x=600 --set y=0 --set width=600 --set height=630 --set fit=cover --project launch --json
-npx -y @fleox/agentphoto@0.1.1 mask set photo --mask '{"gradient":{"type":"linear","angle":0,"stops":["black","white"]}}' --project launch --json
-npx -y @fleox/agentphoto@0.1.1 layer add --id title --text "Find your quiet place" --set x=64 --set y=200 --set width=500 --set font=playfair --set size=72 --set weight=700 --set lineHeight=1.05 --set color=#f8fafc --project launch --json
-npx -y @fleox/agentphoto@0.1.1 layer add --id kicker --text "NEW GUIDE" --set x=64 --set y=150 --set font=inter --set weight=700 --set size=22 --set letterSpacing=4 --set color=#38bdf8 --project launch --json
-npx -y @fleox/agentphoto@0.1.1 layer add --layer '{"id":"rule","type":"shape","shape":"rect","x":64,"y":420,"width":80,"height":6,"radius":3,"fill":"#38bdf8"}' --project launch --json
-npx -y @fleox/agentphoto@0.1.1 render --project launch --json
+npx -y @fleox/agentphoto@0.1.2 catalog sizes --json
+npx -y @fleox/agentphoto@0.1.2 new launch --size og --background "#0f172a" --json
+npx -y @fleox/agentphoto@0.1.2 assets add ./photo.jpg --license proprietary --add-layer --layer-id photo --project launch --json
+npx -y @fleox/agentphoto@0.1.2 layer update photo --set x=600 --set y=0 --set width=600 --set height=630 --set fit=cover --project launch --json
+npx -y @fleox/agentphoto@0.1.2 mask set photo --mask '{"gradient":{"type":"linear","angle":0,"stops":["black","white"]}}' --project launch --json
+npx -y @fleox/agentphoto@0.1.2 layer add --id title --text "Find your quiet place" --set x=64 --set y=200 --set width=500 --set font=playfair --set size=72 --set weight=700 --set lineHeight=1.05 --set color=#f8fafc --project launch --json
+npx -y @fleox/agentphoto@0.1.2 layer add --id kicker --text "NEW GUIDE" --set x=64 --set y=150 --set font=inter --set weight=700 --set size=22 --set letterSpacing=4 --set color=#38bdf8 --project launch --json
+npx -y @fleox/agentphoto@0.1.2 layer add --layer '{"id":"rule","type":"shape","shape":"rect","x":64,"y":420,"width":80,"height":6,"radius":3,"fill":"#38bdf8"}' --project launch --json
+npx -y @fleox/agentphoto@0.1.2 render --project launch --json
 ```
 
 Presets: `og` 1200×630, `square` 1080×1080, `portrait` 1080×1350, `story` 1080×1920, `landscape` 1920×1080, `youtube` 1280×720, `twitter` 1600×900, `pinterest` 1000×1500, `banner` 1920×600, `linkedin-banner` 1584×396, `avatar` 800×800, `product` 2000×2000, `a4` 1240×1754. `fit: "cover"` + `focus: [x, y]` (0..1) frames a photo in any box without distortion.
 
 ## 4. Typography
 
-15 bundled fonts (no web fonts, identical on every computer): `npx -y @fleox/agentphoto@0.1.1 catalog fonts --json` lists them with weights.
+15 bundled fonts (no web fonts, identical on every computer): `npx -y @fleox/agentphoto@0.1.2 catalog fonts --json` lists them with weights.
 
 | Mood | Title font | Body / small text |
 |---|---|---|
@@ -82,7 +82,7 @@ Effects that keep text readable on photos: `stroke` (`{ "color": "#12082e", "wid
 - **Faces and subjects** on the opposite side from the text, looking towards it when possible; never crop through eyes or chins.
 - **Thumbnail test**: the visual must still read at small size. Render a small preview and look:
   ```bash
-  npx -y @fleox/agentphoto@0.1.1 render --project thumb --max-width 320 --json
+  npx -y @fleox/agentphoto@0.1.2 render --project thumb --max-width 320 --json
   ```
 - **Brand colours**: reuse the user's hex values exactly; derive dark / light tints for backgrounds rather than adding new hues.
 
@@ -91,8 +91,8 @@ More layouts (composition grids per format, colour pairs, badge and pill recipes
 ## 6. Check and deliver
 
 ```bash
-npx -y @fleox/agentphoto@0.1.1 check --project thumb --json
-npx -y @fleox/agentphoto@0.1.1 export --project thumb --format jpeg --quality 90 --json
+npx -y @fleox/agentphoto@0.1.2 check --project thumb --json
+npx -y @fleox/agentphoto@0.1.2 export --project thumb --format jpeg --quality 90 --json
 ```
 
 `check` flags text that may run off the canvas, layers outside it and upscaled (soft) photos. Several sizes from one design (export `--variants`, `fit` cover / contain) and web weights: skill `agentphoto-publish`. For a set of variants (A/B titles, colours), copy the project folder per variant, change it and render each; show the user the renders side by side.

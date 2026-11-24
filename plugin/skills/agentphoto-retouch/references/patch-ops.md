@@ -3,9 +3,9 @@
 `doc patch` applies a list of ops **atomically**: they are applied in order, the result is validated, and nothing is written if any op fails or the document becomes invalid (`error.details.opIndex` says which op). `--dry-run` prints the plan without writing; removing layers prints `needsConfirmation` until `--yes`.
 
 ```bash
-npx -y @fleox/agentphoto@0.1.1 doc patch --project my-photo --file ops.json --dry-run --json
-npx -y @fleox/agentphoto@0.1.1 doc patch --project my-photo --file ops.json --json
-npx -y @fleox/agentphoto@0.1.1 doc patch --project my-photo --json '[{"op":"set","path":"layers#title.size","value":96}]'
+npx -y @fleox/agentphoto@0.1.2 doc patch --project my-photo --file ops.json --dry-run --json
+npx -y @fleox/agentphoto@0.1.2 doc patch --project my-photo --file ops.json --json
+npx -y @fleox/agentphoto@0.1.2 doc patch --project my-photo --json '[{"op":"set","path":"layers#title.size","value":96}]'
 ```
 
 ## Ops
@@ -45,16 +45,16 @@ All of these ops were run together on one project (`set`, `addLayer`, `updateLay
 ## Shortcuts (same validation, same plans)
 
 ```bash
-npx -y @fleox/agentphoto@0.1.1 layer update title --set size=96 --set color=#ffd166 --project my-photo --json
-npx -y @fleox/agentphoto@0.1.1 layer update title --set effects.dropShadow.blur=24 --project my-photo --json
-npx -y @fleox/agentphoto@0.1.1 layer update title --set mask=null --project my-photo --json
-npx -y @fleox/agentphoto@0.1.1 layer move title --above photo --project my-photo --json
-npx -y @fleox/agentphoto@0.1.1 filter add photo --type exposure --set exposure=0.3 --project my-photo --json
-npx -y @fleox/agentphoto@0.1.1 filter update photo 0 --set exposure=0.2 --project my-photo --json
-npx -y @fleox/agentphoto@0.1.1 mask set photo --mask '{"gradient":{"type":"linear","angle":0,"stops":["black","white"]}}' --project my-photo --json
-npx -y @fleox/agentphoto@0.1.1 mask clear photo --project my-photo --json
-npx -y @fleox/agentphoto@0.1.1 layer remove title --project my-photo --json
-npx -y @fleox/agentphoto@0.1.1 layer remove title --yes --project my-photo --json
+npx -y @fleox/agentphoto@0.1.2 layer update title --set size=96 --set color=#ffd166 --project my-photo --json
+npx -y @fleox/agentphoto@0.1.2 layer update title --set effects.dropShadow.blur=24 --project my-photo --json
+npx -y @fleox/agentphoto@0.1.2 layer update title --set mask=null --project my-photo --json
+npx -y @fleox/agentphoto@0.1.2 layer move title --above photo --project my-photo --json
+npx -y @fleox/agentphoto@0.1.2 filter add photo --type exposure --set exposure=0.3 --project my-photo --json
+npx -y @fleox/agentphoto@0.1.2 filter update photo 0 --set exposure=0.2 --project my-photo --json
+npx -y @fleox/agentphoto@0.1.2 mask set photo --mask '{"gradient":{"type":"linear","angle":0,"stops":["black","white"]}}' --project my-photo --json
+npx -y @fleox/agentphoto@0.1.2 mask clear photo --project my-photo --json
+npx -y @fleox/agentphoto@0.1.2 layer remove title --project my-photo --json
+npx -y @fleox/agentphoto@0.1.2 layer remove title --yes --project my-photo --json
 ```
 
 `--set` takes dotted keys and JSON values: numbers and `true` / `false` / `null` are parsed, other text stays a string (`--set color=#ffd166`, `--set font=inter`); arrays and objects need quotes (`--set 'focus=[0.5,0.3]'`), and so does text with a line break, as a JSON string (`--set 'text="Line one\nline two"'`).

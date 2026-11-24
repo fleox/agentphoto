@@ -5,9 +5,9 @@ Each document below passed `doc validate` with no warning, `check` with no issue
 Apply one to a project (replaces the whole document: `--dry-run` first, `--yes` after the user agreed if it removes layers), then render:
 
 ```bash
-npx -y @fleox/agentphoto@0.1.1 doc apply --file recipe.json --dry-run --project my-photo --json
-npx -y @fleox/agentphoto@0.1.1 doc apply --file recipe.json --yes --project my-photo --json
-npx -y @fleox/agentphoto@0.1.1 render --project my-photo --compare --json
+npx -y @fleox/agentphoto@0.1.2 doc apply --file recipe.json --dry-run --project my-photo --json
+npx -y @fleox/agentphoto@0.1.2 doc apply --file recipe.json --yes --project my-photo --json
+npx -y @fleox/agentphoto@0.1.2 render --project my-photo --compare --json
 ```
 
 On an existing project, prefer adding the same layers and filters with `layer add` / `filter add` / `doc patch`: the user's other layers stay.
