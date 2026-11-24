@@ -1,0 +1,41 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - run: npm ci
+      - run: npm run typecheck
+      - run: npm run build
+      # After the build: the render e2e tests use dist/engine and the runner's
+      # Chrome (they skip when either is missing). Tests never download AI models.
+      - run: npm test
+        env:
+          AGENTPHOTO_CDP_TIMEOUT_MS: "180000"
+      - run: npm run check:skills
+      # Hermes Agent skills (generated from plugin/skills) + their Python tests.
+      - run: npm run check:hermes
+      - run: node scripts/build-cli-docs.mjs --check
+      - run: node scripts/build-library.mjs --check
+      - name: CLI smoke test
+        run: |
+          node dist/agent/agentphoto.mjs version --json
+          node dist/agent/agentphoto.mjs help --json > /dev/null
+          node dist/agent/agentphoto.mjs templates list --json > /dev/null
+      - run: npm pack --dry-run
