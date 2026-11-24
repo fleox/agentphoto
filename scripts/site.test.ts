@@ -39,6 +39,9 @@ describe("site", () => {
     }
     expect(notFoundPage()).toContain('content="noindex"');
     expect(appHead()).toContain("<title>");
+    // Google Analytics on every page of the public site, disclosed in the FAQ.
+    for (const html of [appHead(), notFoundPage(), guidePage(en, { version: "1" }), guidePage(fr, { version: "1" })]) expect(html).toContain("googletagmanager.com/gtag/js?id=G-JE88WG1Z5R");
+    for (const c of [en, fr]) expect(JSON.stringify(c.faq)).toContain("Google Analytics");
   });
 
   it("follows the wording rules", () => {

@@ -9,6 +9,14 @@ export const SITE_URL = "https://www.photo-touch-up.fr";
 export const REPO_URL = "https://github.com/fleox/agentphoto";
 export const NPM_URL = "https://www.npmjs.com/package/@fleox/agentphoto";
 export const LANGS = { en, fr };
+// Google Analytics on every page of the public site (the owner's choice; the
+// npm package's Studio and the CLI have none). docs/security.md says so.
+export const GA_ID = "G-JE88WG1Z5R";
+
+export function analytics() {
+  return `<script async src="https://www.googletagmanager.com/gtag/js?id=${GA_ID}"></script>
+    <script>window.dataLayer = window.dataLayer || []; function gtag(){dataLayer.push(arguments);} gtag("js", new Date()); gtag("config", "${GA_ID}");</script>`;
+}
 
 const esc = (s) => String(s).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
 const json = (v) => JSON.stringify(v).replace(/</g, "\\u003c");
@@ -80,6 +88,7 @@ export function appHead() {
   const c = en;
   return [
     `<title>${esc(c.app.title)}</title>`,
+    analytics(),
     metaTags({ title: c.app.title, description: c.app.description, url: `${SITE_URL}/`, lang: "en" }),
     `<script type="application/ld+json">${json(appJsonLd(c))}</script>`,
   ].join("\n    ");
@@ -134,6 +143,7 @@ function page(c, { title, description, url, alternates, body, jsonLd = [] }) {
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="color-scheme" content="dark">
+    ${analytics()}
     <title>${esc(title)}</title>
     ${metaTags({ title, description, url, lang: c.lang, alternates })}
     <link rel="icon" href="${FAVICON}">

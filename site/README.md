@@ -8,6 +8,7 @@ The Studio, usable online without installing anything, plus a guide in English a
 | `/guide/`, `/fr/guide/` | The guide: features with screenshots, step-by-step tasks, the agent version, FAQ | `content/en.mjs`, `content/fr.mjs` → `render.mjs` |
 | `/config.js` | `guideUrl` for the Studio's start screen ("Guide" link) | `scripts/build-site.mjs` |
 | `/site/` | `style.css`, Inter (from `library/fonts`), screenshots (`img/<lang>/`), the demo film, the Open Graph image, the diagram | this folder + `.github/assets/` |
+| every page | Google Analytics (`GA_ID` in `render.mjs`, owner's choice; disclosed in the FAQ and `docs/security.md`) | `render.mjs` |
 | `404.html`, `robots.txt`, `sitemap.xml`, `CNAME`, `.nojekyll` | GitHub Pages and crawlers | `scripts/build-site.mjs` |
 
 ## Build and preview

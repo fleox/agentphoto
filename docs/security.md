@@ -24,7 +24,7 @@ The same holds for any AI agent you connect yourself (Claude Code, an MCP client
 The public site is the Studio as static files (GitHub Pages, built from this repository by `.github/workflows/site.yml`, see [site/README.md](../site/README.md)). It works like the Studio without the CLI:
 
 - Photos and projects are stored in the browser (IndexedDB) and never sent anywhere: editing, AI and exports run in the page. Exports are downloaded files.
-- The site serves the editor's files only; it has no API, no account, no analytics and no third-party scripts or fonts.
+- The site serves the editor's files; it has no API and no account. Its pages load **Google Analytics** (`googletagmanager.com`, ID `G-JE88WG1Z5R`), which measures visits: pages viewed, browser, approximate location. It never receives photos or project content. No other third-party scripts or fonts. The npm package (CLI, MCP, `agentphoto studio`) has no analytics.
 - AI models download once from `huggingface.co` into the browser's cache, after a notice naming the model, its size and its licence.
 - The optional assistant behaves as above (your key in the browser's `localStorage`, previews to `api.anthropic.com`).
 - Clearing the site's data in the browser deletes the projects.

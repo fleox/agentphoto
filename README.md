@@ -298,7 +298,7 @@ claude mcp add agentphoto -- npx -y @fleox/agentphoto@0.1.2 mcp --project ~/Pict
 - **Local.** Projects are folders on your disk; editing, previews, analysis, AI and exports run on your computer, in Node.js and your own browser engine.
 - **AgentPhoto uploads nothing.** The AI models come to the photos: they download **once** from Hugging Face into `~/.cache/agentphoto/models` and then run offline.
 - **Nothing else phones home.** No account, no telemetry, no update check, no CDN, no web fonts. The only other network uses are importing an image from a URL you give, and the optional Studio assistant (your own Claude API key, to `api.anthropic.com`; it sends the previews its tools render).
-- **The online Studio** ([www.photo-touch-up.fr](https://www.photo-touch-up.fr/)) is static files: projects are stored in your browser and edited, cut out and exported in the page; nothing is uploaded.
+- **The online Studio** ([www.photo-touch-up.fr](https://www.photo-touch-up.fr/)) is static files: projects are stored in your browser and edited, cut out and exported in the page; your photos are not uploaded. That site measures visits with Google Analytics; the npm package has no analytics.
 - **Your agent is yours.** An agent you connect (Claude Code, an MCP client) receives the renders it asks for and handles them under its own settings.
 - **Non-destructive.** Source files are copied, never modified; AI masks are new files.
 
