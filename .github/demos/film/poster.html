@@ -1,0 +1,33 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><title>AgentPhoto poster</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{width:1800px;height:1013px;overflow:hidden}
+body{font-family:Inter,-apple-system,"SF Pro Display","Helvetica Neue",Arial,sans-serif;color:#fff;-webkit-font-smoothing:antialiased;position:relative;
+ background:radial-gradient(1100px 760px at 0% 0%,rgba(61,107,255,.32),transparent 70%),radial-gradient(900px 600px at 100% 100%,rgba(122,165,255,.12),transparent 70%),#0a0b0f}
+.head{position:absolute;top:34px;left:0;right:0;display:flex;justify-content:center;align-items:center;gap:20px;font-size:52px;letter-spacing:-.02em}
+.head img{width:66px;height:66px}
+.head b{font-weight:750}.head b span{color:#7aa5ff}
+.head em{font-style:normal;color:#e3e8f4;font-weight:500}
+.g{background:linear-gradient(90deg,#9dbbff,#5b84ff 70%);-webkit-background-clip:text;background-clip:text;color:transparent}
+.grid{position:absolute;left:210px;top:122px;width:1380px;display:grid;grid-template-columns:repeat(3,1fr);gap:14px}
+.grid div{aspect-ratio:16/9;border-radius:14px;overflow:hidden;border:1px solid rgba(255,255,255,.12);box-shadow:0 20px 50px rgba(0,0,0,.5)}
+.grid img{width:100%;height:100%;object-fit:cover;display:block}
+.dim{position:absolute;left:210px;top:122px;width:1380px;height:790px;border-radius:14px;background:radial-gradient(520px 340px at 50% 50%,rgba(5,6,10,.55),rgba(5,6,10,.12))}
+.play{position:absolute;left:50%;top:440px;transform:translate(-50%,-50%);width:200px;height:200px;border-radius:50%;background:#4f7bff;box-shadow:0 0 0 18px rgba(79,123,255,.28),0 30px 80px rgba(0,0,0,.6);display:flex;align-items:center;justify-content:center}
+.play svg{width:84px;height:84px;margin-left:12px}
+.pill{position:absolute;left:50%;top:600px;transform:translateX(-50%);padding:20px 44px;border-radius:999px;background:rgba(18,20,28,.86);border:1px solid rgba(255,255,255,.14);font-size:50px;font-weight:750;letter-spacing:-.015em;white-space:nowrap;box-shadow:0 20px 60px rgba(0,0,0,.5)}
+.foot{position:absolute;bottom:40px;left:0;right:0;text-align:center;font-size:28px;color:#a9b1c2}
+</style></head>
+<body>
+<div class="head"><img src="./logo.svg" alt=""><b>Agent<span>Photo</span></b><em>· the photo studio <span class="g">your AI agent</span> can run</em></div>
+<div class="grid">
+  <div><img src="poster/p1.jpg"></div><div><img src="poster/p2.jpg"></div><div><img src="poster/p3.jpg" style="object-position:20% 50%"></div>
+  <div><img src="poster/p4.png"></div><div><img src="poster/p5.jpg"></div><div><img src="poster/p6.jpg" style="object-position:0% 50%"></div>
+  <div><img src="poster/p7.jpg"></div><div><img src="poster/p8.jpg" style="object-position:50% 40%"></div><div><img src="poster/p9.jpg"></div>
+</div>
+<div class="dim"></div>
+<div class="play"><svg viewBox="0 0 24 24"><path d="M6 3.5v17l14-8.5z" fill="#fff"/></svg></div>
+<div class="pill">Watch the 2-minute demo</div>
+<div class="foot">Real Claude Code sessions · real renders · the Studio · local AI</div>
+</body></html>

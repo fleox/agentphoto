@@ -8,6 +8,8 @@
       "Bash(npm run build:agent)",
       "Bash(npm test)",
       "Bash(npm run check:skills)",
+      "Bash(npm run check:hermes)",
+      "Bash(npm run hermes:build)",
       "Bash(npm run docs:cli)",
       "Bash(npm run check:docs)",
       "Bash(npx vitest run *)",
@@ -31,7 +33,9 @@
       "Bash(git status *)",
       "Bash(git diff *)",
       "Bash(git log *)",
-      "Bash(git check-ignore *)"
+      "Bash(git check-ignore *)",
+      "Bash(gh run list *)",
+      "Bash(gh run view *)"
     ]
   }
 }

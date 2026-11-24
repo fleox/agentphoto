@@ -1,0 +1,43 @@
+<!doctype html>
+<!-- Rendered with: node shot.mjs "file://$PWD/templates-grid.html?dir=<folder of <template-id>.png>" out.png --size 1800x<page height> --scale 1, then JPG q85 -> ../../assets/templates-grid.jpg.
+     Images: `agentphoto export --format png` of fresh `new t --template <id> --image <library photo>` projects (published CLI, outside the repo),
+     plus `remove-bg photo` on the cut-out templates (avatar-pro, youtube-thumbnail, product-white). Rows are justified: every tile keeps its real aspect ratio. -->
+<html lang="en"><head><meta charset="utf-8"><title>AgentPhoto templates</title>
+<style>
+@font-face{font-family:"Inter";font-weight:400;src:url("../../../library/fonts/inter/inter-latin-400-normal.woff2") format("woff2")}
+@font-face{font-family:"Inter";font-weight:600;src:url("../../../library/fonts/inter/inter-latin-600-normal.woff2") format("woff2")}
+@font-face{font-family:"Inter";font-weight:700;src:url("../../../library/fonts/inter/inter-latin-700-normal.woff2") format("woff2")}
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{background:#0b0c10}
+body{width:1800px;font-family:Inter,-apple-system,"Helvetica Neue",Arial,sans-serif;color:#f2f4f8;-webkit-font-smoothing:antialiased;
+ background:radial-gradient(900px 400px at 0% 0%,#121a35,transparent 70%),#0b0c10;padding:40px}
+header{display:flex;align-items:flex-end;justify-content:space-between;margin-bottom:26px}
+.ttl{display:flex;align-items:center;gap:18px}
+.ttl img{width:56px;height:56px}
+h1{font-size:34px;font-weight:700;letter-spacing:-.02em}
+h1 span{color:#7aa5ff}
+p.sub{font-size:17px;color:#a3aab8;margin-top:4px}
+code{font-variant-ligatures:none;font-family:ui-monospace,"SF Mono",Menlo,monospace;font-size:15px;color:#cfd6e4;background:#161a24;border:1px solid #262a34;border-radius:8px;padding:9px 14px}
+.row{display:flex;gap:12px;margin-bottom:12px}
+.t{position:relative;border-radius:10px;overflow:hidden;border:1px solid #23262f;background:#14161c;flex:none}
+.t.clear{background:transparent;border-color:transparent}
+.t img{width:100%;height:100%;object-fit:contain;display:block}
+.t .l{position:absolute;left:8px;bottom:8px;font-size:13px;font-weight:600;padding:4px 8px;border-radius:6px;background:rgba(10,11,15,.74);backdrop-filter:blur(6px);color:#fff;white-space:nowrap}
+.t .l i{font-style:normal;color:#9db6ff;font-weight:400;margin-left:6px}
+.t.narrow .l i{display:block;margin-left:0;margin-top:2px}
+.foot{margin-top:14px;border-radius:10px;border:1.5px dashed #2a2f3b;padding:16px;text-align:center;color:#a3aab8;font-size:17px}
+</style></head><body>
+<header><div class="ttl"><img src="../../assets/logo.svg" alt=""><div><h1>8 templates <span>to start from</span></h1><p class="sub">Every tile is a real export of the template with a bundled sample photo, straight from <b style="color:#f2f4f8">agentphoto export</b>.</p></div></div>
+<code>npx -y @fleox/agentphoto@0.1.0 new thumb --template youtube-thumbnail --image me.jpg</code></header>
+<div id="g"></div>
+<div class="foot">Thumbnails · link previews · posts · stories · banners · avatars · packshots — or start from a blank canvas in any of 13 size presets</div>
+<script>
+const T={"youtube-thumbnail":["YouTube thumbnail","1280×720",1280/720],"og-article":["Article link preview","1200×630",1200/630],"social-quote":["Quote post","1080×1080",1],"avatar-pro":["Professional avatar","800×800",1,true],
+"sale-banner":["Sale banner","1920×600",1920/600],"story-promo":["Story promo","1080×1920",1080/1920],"polaroid":["Polaroid memory","1080×1350",1080/1350],"product-white":["Product on white","2000×2000",1]};
+const rows=[["youtube-thumbnail","og-article","social-quote","avatar-pro"],["sale-banner","story-promo","polaroid","product-white"]];
+const dir=new URLSearchParams(location.search).get("dir")||"./grid";
+const W=1720,gap=12,g=document.getElementById("g");
+for(const r of rows){const sum=r.reduce((s,id)=>s+T[id][2],0),h=(W-gap*(r.length-1))/sum;const row=document.createElement("div");row.className="row";
+for(const id of r){const [title,size,ar,clear]=T[id];const d=document.createElement("div");d.className="t"+(clear?" clear":"")+(h*ar<240?" narrow":"");d.style.width=(h*ar)+"px";d.style.height=h+"px";
+d.innerHTML=`<img src="${dir}/${id}.png" alt=""><div class="l">${title}<i>${size}</i></div>`;row.appendChild(d)}g.appendChild(row)}
+</script></body></html>

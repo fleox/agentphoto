@@ -1,0 +1,172 @@
+<!doctype html>
+<!-- Rendered with: node shot.mjs "file://$PWD/how-it-works.html?light|?dark" ../../assets/how-it-works-<theme>.png --size 1800x815 --scale 1. Keep true to docs/architecture.md and docs/security.md. -->
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<title>AgentPhoto — how it works</title>
+<style>
+  @font-face { font-family: "Inter"; font-weight: 400; src: url("../../../library/fonts/inter/inter-latin-400-normal.woff2") format("woff2"); }
+  @font-face { font-family: "Inter"; font-weight: 600; src: url("../../../library/fonts/inter/inter-latin-600-normal.woff2") format("woff2"); }
+  @font-face { font-family: "Inter"; font-weight: 700; src: url("../../../library/fonts/inter/inter-latin-700-normal.woff2") format("woff2"); }
+  @font-face { font-family: "Inter"; font-weight: 800; src: url("../../../library/fonts/inter/inter-latin-800-normal.woff2") format("woff2"); }
+  :root {
+    --bg: #f7f8fb; --bg2: #eef2ff; --card: #ffffff; --line: #e3e6ee; --ink: #0f1115; --ink2: #4b5262; --ink3: #7b8394;
+    --accent: #3d6bff; --accent2: #5b84ff; --accentSoft: #eaf0ff; --engine1: #eef3ff; --engine2: #e6f4ff; --engineLine: #b9cbff;
+    --pill: #ffffff; --arrow: #7f96e6; --ok: #10b981; --shadow: 0 1px 2px rgba(16,24,40,.04), 0 4px 14px rgba(16,24,40,.05);
+    --mono: ui-monospace, "SF Mono", Menlo, monospace;
+  }
+  .dark {
+    --bg: #0b0c10; --bg2: #10162b; --card: #14161c; --line: #262a34; --ink: #f2f4f8; --ink2: #a3aab8; --ink3: #7d8596;
+    --accent: #7aa5ff; --accent2: #7aa5ff; --accentSoft: #1a2340; --engine1: #131b33; --engine2: #0f2032; --engineLine: #2f4580;
+    --pill: #1b1f29; --arrow: #5e78d6; --shadow: 0 1px 2px rgba(0,0,0,.3), 0 6px 18px rgba(0,0,0,.25);
+  }
+  html { background: var(--bg); }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { width: 1800px; font-family: Inter, -apple-system, "SF Pro Text", "Helvetica Neue", Arial, sans-serif; color: var(--ink);
+    background: radial-gradient(1200px 600px at 0% 0%, var(--bg2), transparent 70%), var(--bg); -webkit-font-smoothing: antialiased; }
+  .wrap { position: relative; padding: 48px 60px 50px; }
+  .eyebrow { font-size: 15px; font-weight: 700; letter-spacing: .16em; text-transform: uppercase; color: var(--accent); }
+  h1 { font-size: 38px; font-weight: 750; letter-spacing: -.02em; margin-top: 10px; }
+  h1 span { color: var(--ink3); font-weight: 500; }
+  .badge { position: absolute; right: 60px; top: 58px; display: flex; align-items: center; gap: 10px; padding: 13px 20px; border-radius: 999px;
+    border: 1px solid var(--line); background: var(--card); font-weight: 650; font-size: 18px; box-shadow: var(--shadow); }
+  .badge i { width: 11px; height: 11px; border-radius: 50%; background: var(--ok); box-shadow: 0 0 0 4px color-mix(in srgb, var(--ok) 22%, transparent); }
+  .grid { position: relative; display: grid; grid-template-columns: 310px 330px 410px 1fr; column-gap: 74px; margin-top: 56px; align-items: stretch; }
+  .col { display: flex; flex-direction: column; gap: 22px; }
+  .card { background: var(--card); border: 1px solid var(--line); border-radius: 16px; box-shadow: var(--shadow); }
+  .who { padding: 24px 24px 26px; flex: 1; }
+  .label { font-size: 13px; font-weight: 700; letter-spacing: .14em; text-transform: uppercase; color: var(--accent); }
+  .who h3 { font-size: 21px; font-weight: 700; margin-top: 12px; line-height: 1.22; letter-spacing: -.01em; }
+  .who p { font-size: 16px; line-height: 1.5; color: var(--ink2); margin-top: 8px; }
+  .door { display: flex; gap: 16px; align-items: center; padding: 20px 22px; height: 98px; }
+  .ico { flex: none; width: 46px; height: 46px; border-radius: 12px; background: var(--accentSoft); display: grid; place-items: center; color: var(--accent); }
+  .ico svg { width: 22px; height: 22px; }
+  .door h4 { font-size: 20px; font-weight: 700; letter-spacing: -.01em; }
+  .door p { font-size: 15px; color: var(--ink2); margin-top: 4px; }
+  .door code, .muted code { font-variant-ligatures: none; font-family: var(--mono); font-size: 14px; }
+  .engine { padding: 24px 26px; border-color: var(--engineLine); background: linear-gradient(160deg, var(--engine1), var(--engine2)); flex: 1; display: flex; flex-direction: column; }
+  .engine h2 { font-size: 32px; font-weight: 780; letter-spacing: -.02em; margin-top: 8px; }
+  .engine .sub { font-family: var(--mono); font-size: 14.5px; color: var(--ink2); margin-top: 6px; }
+  .pills { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 18px; }
+  .pill { background: var(--pill); border: 1px solid var(--line); border-radius: 999px; padding: 7px 14px; font-weight: 650; font-size: 15px; }
+  .list { font-size: 15.5px; line-height: 1.75; color: var(--ink2); margin-top: 16px; margin-bottom: 20px; }
+  .list b { color: var(--ink); font-weight: 650; }
+  .runtime { margin-top: auto; padding: 18px 18px 18px; border-radius: 14px; background: var(--card); border: 1px solid var(--line); }
+  .runtime h4 { font-size: 19px; font-weight: 700; margin-top: 8px; }
+  .runtime p { font-size: 14.5px; color: var(--ink2); margin-top: 6px; line-height: 1.5; }
+  .runtime code { font-family: var(--mono); font-size: 13.5px; color: var(--ink); }
+  .out { padding: 24px 26px; flex: 1; display: flex; flex-direction: column; }
+  .out .item { padding: 16px 0; border-top: 1px solid var(--line); }
+  .out .label + .item { margin-top: 14px; }
+  .out h4 { font-size: 20px; font-weight: 700; display: flex; align-items: center; gap: 10px; letter-spacing: -.01em; }
+  .tag { font-family: var(--mono); font-size: 12.5px; font-weight: 600; color: var(--accent); background: var(--accentSoft); border: 1px solid var(--engineLine); border-radius: 6px; padding: 2px 7px; }
+  .out p { font-size: 15px; color: var(--ink2); margin-top: 5px; line-height: 1.45; }
+  .out .foot { margin-top: auto; padding-top: 16px; border-top: 1px solid var(--line); font-size: 15.5px; font-weight: 550; line-height: 1.5; }
+  .strip { margin-top: 34px; margin-left: 384px; display: flex; align-items: center; gap: 22px; padding: 20px 26px; border: 1.5px dashed var(--line); border-radius: 16px; background: color-mix(in srgb, var(--card) 70%, transparent); }
+  .strip .label { flex: none; }
+  .strip .txt { font-size: 18px; font-weight: 600; }
+  .strip .txt span { color: var(--ink3); font-weight: 450; }
+  svg.arrows { position: absolute; inset: 0; pointer-events: none; overflow: visible; }
+  .elabel { position: absolute; font-size: 14px; font-weight: 650; color: var(--accent); background: var(--bg); padding: 2px 6px; border-radius: 6px; }
+</style>
+</head>
+<body>
+<div class="wrap" id="wrap">
+  <div class="eyebrow">How it works</div>
+  <h1>Four front doors, one engine, on your own computer. <span>Nothing in between.</span></h1>
+  <div class="badge"><i></i>No server of ours</div>
+
+  <div class="grid" id="grid">
+    <div class="col">
+      <div class="card who" id="you">
+        <div class="label">You</div>
+        <h3>Any browser</h3>
+        <p>Open the Studio on your own machine: layers, filters and looks, masks, AI select, brush, export, 8 templates.</p>
+      </div>
+      <div class="card who" id="agent">
+        <div class="label">Your AI agent</div>
+        <h3>Claude Code · Claude · Hermes · any MCP client</h3>
+        <p>Skills teach it to retouch, cut out, design, render, look at the preview, fix and export.</p>
+      </div>
+    </div>
+
+    <div class="col">
+      <div class="card door" id="d-studio">
+        <div class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="16" rx="2"/><path d="M3 9h18M8 4v5"/></svg></div>
+        <div><h4>Studio</h4><p>Visual editor, React SPA, local</p></div>
+      </div>
+      <div class="card door" id="d-assistant">
+        <div class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3l1.8 4.7L18.5 9.5l-4.7 1.8L12 16l-1.8-4.7L5.5 9.5l4.7-1.8z"/><path d="M19 15l.8 2.2L22 18l-2.2.8L19 21l-.8-2.2L16 18l2.2-.8z"/></svg></div>
+        <div><h4>Studio assistant</h4><p>Claude API, your own key</p></div>
+      </div>
+      <div class="card door" id="d-cli">
+        <div class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 7l5 5-5 5M12 17h7"/></svg></div>
+        <div><h4>agentphoto CLI</h4><p><code>--json</code> for agents, humans, CI</p></div>
+      </div>
+      <div class="card door" id="d-mcp">
+        <div class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 7l-5 5 5 5M15 7l5 5-5 5"/></svg></div>
+        <div><h4>MCP server</h4><p>stdio, same tool catalog</p></div>
+      </div>
+    </div>
+
+    <div class="col">
+      <div class="card engine" id="engine">
+        <div class="label">One engine</div>
+        <h2>Document ops</h2>
+        <div class="sub">src/ops · one AI tool catalog</div>
+        <div class="pills"><span class="pill">Validate</span><span class="pill">Patch</span><span class="pill">Render</span><span class="pill">Export</span></div>
+        <div class="list"><div><b>photo.json</b> get · apply · <b>patch</b> · diff</div><div><b>catalog</b> 28 filters · 20 looks, “did you mean”</div><div><b>geometry</b> crop · resize · rotate · flip</div><div><b>check</b> missing files · cost · licences</div></div>
+        <div class="runtime" id="runtime">
+          <div class="label">Pixels + local AI</div>
+          <h4>Compositor + local AI</h4>
+          <p>Cut-outs and Segment Anything masks. Rendered headless in <b style="color:var(--ink);font-weight:650">your own Chrome</b>, so the agent looks at its work.</p>
+        </div>
+      </div>
+    </div>
+
+    <div class="col">
+      <div class="card out" id="out">
+        <div class="label">Ordinary image files</div>
+        <div class="item"><h4>PNG · JPEG · WebP · AVIF</h4><p>Quality, size and background per export; your source photos are never modified</p></div>
+        <div class="item"><h4>Social sizes <span class="tag">--variants</span></h4><p>13 presets: OG card, square, story, YouTube, banner… several in one command</p></div>
+        <div class="item"><h4>Transparent cut-outs</h4><p>PNG with alpha; the mask stays editable in the project</p></div>
+        <div class="foot">No account, no CDN, no web fonts, no analytics.<br/>Editing, AI and exports run locally.</div>
+      </div>
+    </div>
+    <svg class="arrows" id="arrows"></svg>
+  </div>
+
+  <div class="strip">
+    <div class="label">Built in, offline</div>
+    <div class="txt">15 fonts · 6 CC0 photos · 8 templates · 13 size presets <span>· AI models downloaded once from Hugging Face, then cached</span></div>
+  </div>
+</div>
+<script>
+  if (location.search.includes("dark")) document.documentElement.classList.add("dark");
+  const grid = document.getElementById("grid"), svg = document.getElementById("arrows");
+  const g = grid.getBoundingClientRect();
+  const R = (id) => { const r = document.getElementById(id).getBoundingClientRect(); return { l: r.left - g.left, r: r.right - g.left, t: r.top - g.top, b: r.bottom - g.top, cy: (r.top + r.bottom) / 2 - g.top, cx: (r.left + r.right) / 2 - g.left }; };
+  const NS = "http://www.w3.org/2000/svg";
+  svg.innerHTML = `<defs><marker id="m" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0L10 5L0 10z" fill="var(--arrow)"/></marker></defs>`;
+  const curve = (x1, y1, x2, y2, both) => {
+    const p = document.createElementNS(NS, "path"), dx = (x2 - x1) * 0.5;
+    p.setAttribute("d", `M${x1} ${y1} C${x1 + dx} ${y1}, ${x2 - dx} ${y2}, ${x2} ${y2}`);
+    p.setAttribute("fill", "none"); p.setAttribute("stroke", "var(--arrow)"); p.setAttribute("stroke-width", "2.2");
+    p.setAttribute("marker-end", "url(#m)"); if (both) p.setAttribute("marker-start", "url(#m)");
+    svg.appendChild(p);
+  };
+  const you = R("you"), agent = R("agent"), eng = R("engine"), out = R("out");
+  const doors = ["d-studio", "d-assistant", "d-cli", "d-mcp"].map(R);
+  const gap = 10;
+  curve(you.r + 4, you.cy - 30, doors[0].l - gap, doors[0].cy);
+  curve(you.r + 4, you.cy + 30, doors[1].l - gap, doors[1].cy);
+  curve(agent.r + 4, agent.cy - 30, doors[2].l - gap, doors[2].cy);
+  curve(agent.r + 4, agent.cy + 30, doors[3].l - gap, doors[3].cy);
+  const ys = [0.2, 0.38, 0.56, 0.74].map((f) => eng.t + (eng.b - eng.t) * f);
+  doors.forEach((d, i) => curve(d.r + 4, d.cy, eng.l - gap, ys[i]));
+  curve(eng.r + 6, eng.cy, out.l - gap, eng.cy);
+  const lab = document.createElement("div"); lab.className = "elabel"; lab.textContent = "export";
+  grid.appendChild(lab); lab.style.left = (eng.r + (out.l - eng.r) / 2 - 26) + "px"; lab.style.top = (eng.cy + 10) + "px";
+</script>
+</body>
+</html>

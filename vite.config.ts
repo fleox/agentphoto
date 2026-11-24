@@ -7,7 +7,7 @@ import { ORT_ALIAS } from "./vite.engine.config.ts";
 // The Studio SPA (src/studio/) → dist/studio/, served by `agentphoto studio`
 // (relative base so it also works from any static folder).
 // `npm run dev` runs it without the CLI (in-browser projects); set
-// AGENTPHOTO_STUDIO_API=http://127.0.0.1:4331 to proxy a running `agentphoto studio`.
+// AGENTPHOTO_STUDIO_API=http://127.0.0.1:4330 to proxy a running `agentphoto studio`.
 //
 // In-browser projects (local mode) need, next to index.html:
 //   library/    bundled fonts + sample photos (copied from the repo's library/)

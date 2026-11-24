@@ -1,0 +1,110 @@
+[
+ [
+  "a1",
+  "What if your AI agent could retouch your photos?"
+ ],
+ [
+  "a2",
+  "AgentPhoto is the photo studio your AI agent can run."
+ ],
+ [
+  "b1",
+  "Every edit is a layer you can change later,"
+ ],
+ [
+  "b2",
+  "the agent looks at its own renders,"
+ ],
+ [
+  "b3",
+  "and the editing and the AI run on your computer."
+ ],
+ [
+  "c1",
+  "A real Claude Code session. One sentence: make my trip photo look great."
+ ],
+ [
+  "c2",
+  "The agent measures the photo, fixes light and colour, adds a film look, and compares before and after."
+ ],
+ [
+  "c3",
+  "Then it exports a square post and a link preview."
+ ],
+ [
+  "c4",
+  "Before and after, from one sentence."
+ ],
+ [
+  "d1",
+  "Next, a product photo for a shop."
+ ],
+ [
+  "d2",
+  "A local AI model removes the background. Nothing is uploaded."
+ ],
+ [
+  "d3",
+  "Clean, on white, with a soft shadow."
+ ],
+ [
+  "e1",
+  "Or a YouTube thumbnail from a template, with a title you can read on a phone."
+ ],
+ [
+  "e2",
+  "And the matching link preview."
+ ],
+ [
+  "f1",
+  "Agents start from templates and recipes:"
+ ],
+ [
+  "f2",
+  "thumbnails, link previews, stories and sale banners,"
+ ],
+ [
+  "f3",
+  "packshots on white, portraits, and film looks."
+ ],
+ [
+  "g1",
+  "When you want to finish by hand, open the Studio."
+ ],
+ [
+  "g2",
+  "Pick a look, check the filters, move the title,"
+ ],
+ [
+  "g3",
+  "and export at the size you need."
+ ],
+ [
+  "h1",
+  "One engine, four front doors: the Studio, its assistant, the CLI and an MCP server."
+ ],
+ [
+  "h2",
+  "Renders run headless in your own Chrome, so the agent sees its work."
+ ],
+ [
+  "i1",
+  "PNG, JPEG or WebP, at every social size, in one command."
+ ],
+ [
+  "i2",
+  "Transparent cut-outs, and light files for the web."
+ ],
+ [
+  "i3",
+  "No server, no account, no upload."
+ ],
+ [
+  "j1",
+  "AgentPhoto. The photo studio your AI agent can run."
+ ],
+ [
+  "k1",
+  "Install the Claude Code plugin, or run it with npx."
+ ]
+]

@@ -1,0 +1,64 @@
+<!doctype html>
+<!-- Before / after composite for the README showcase.
+     Rendered with: node shot.mjs "file://$PWD/before-after.html?before=<png>&after=<png>&w=1600" out.png --size 1600x<h> --scale 1, then JPG q85.
+     Params: before, after (image URLs: `agentphoto render --compare` / `export` outputs of the published CLI), w (total width),
+     mode=side (default, two panels) | split (one frame, after on the left of the divider), p (split position 0..1),
+     lb / la (labels, default Before / After). The pictures are never retouched here: this page only lays them out. -->
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<title>AgentPhoto before and after</title>
+<style>
+  @font-face { font-family: "Inter"; font-weight: 600; src: url("../../../library/fonts/inter/inter-latin-600-normal.woff2") format("woff2"); }
+  @font-face { font-family: "Inter"; font-weight: 700; src: url("../../../library/fonts/inter/inter-latin-700-normal.woff2") format("woff2"); }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html, body { background: #0b0c10; overflow: hidden; }
+  body { font-family: Inter, -apple-system, "Helvetica Neue", Arial, sans-serif; -webkit-font-smoothing: antialiased; }
+  .row { display: flex; gap: 6px; }
+  .panel { position: relative; overflow: hidden; }
+  .panel img { display: block; width: 100%; height: 100%; object-fit: cover; }
+  .lab { position: absolute; top: 18px; left: 18px; font-size: 20px; font-weight: 700; letter-spacing: .02em; color: #fff;
+    padding: 7px 14px; border-radius: 999px; background: rgba(10, 11, 15, .62); backdrop-filter: blur(6px); }
+  .lab.after { background: rgba(61, 107, 255, .86); }
+  .split { position: relative; overflow: hidden; }
+  .split img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
+  .split .top { position: absolute; inset: 0; }
+  .split .bar { position: absolute; top: 0; bottom: 0; width: 4px; margin-left: -2px; background: #fff; box-shadow: 0 0 18px rgba(0,0,0,.45); }
+  .split .knob { position: absolute; top: 50%; width: 44px; height: 44px; margin: -22px 0 0 -22px; border-radius: 50%; background: #fff;
+    box-shadow: 0 4px 18px rgba(0,0,0,.4); display: grid; place-items: center; }
+  .split .knob svg { width: 24px; height: 24px; }
+  .split .lab.r { left: auto; right: 18px; }
+</style>
+</head>
+<body>
+<div id="root"></div>
+<script>
+  const q = new URLSearchParams(location.search);
+  const W = Number(q.get("w") || 1600), gap = 6;
+  const before = q.get("before"), after = q.get("after"), mode = q.get("mode") || "side";
+  const lb = q.get("lb") || "Before", la = q.get("la") || "After";
+  const root = document.getElementById("root");
+  const load = (src) => new Promise((r) => { const i = new Image(); i.onload = () => r(i); i.src = src; });
+  window.ready = Promise.all([load(before), load(after), document.fonts.ready]).then(([b]) => {
+    const ar = b.naturalHeight / b.naturalWidth;
+    if (mode === "split") {
+      const H = Math.round(W * ar);
+      root.innerHTML = `<div class="split" style="width:${W}px;height:${H}px"><img src="${before}"><div class="top" id="top"><img src="${after}"></div>
+        <div class="bar" id="bar"><div class="knob"><svg viewBox="0 0 24 24" fill="none" stroke="#0b0c10" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M9 7l-5 5 5 5M15 7l5 5-5 5"/></svg></div></div>
+        <div class="lab after">${la}</div><div class="lab r">${lb}</div></div>`;
+      window.setSplit = (p) => {
+        document.getElementById("top").style.clipPath = `inset(0 ${(1 - p) * 100}% 0 0)`;
+        document.getElementById("bar").style.left = p * W + "px";
+      };
+      window.setSplit(Number(q.get("p") ?? 0.5));
+      return { width: W, height: H };
+    }
+    const pw = (W - gap) / 2, H = Math.round(pw * ar);
+    root.innerHTML = `<div class="row" style="width:${W}px">
+      <div class="panel" style="width:${pw}px;height:${H}px"><img src="${before}"><div class="lab">${lb}</div></div>
+      <div class="panel" style="width:${pw}px;height:${H}px"><img src="${after}"><div class="lab after">${la}</div></div></div>`;
+    return { width: W, height: H };
+  });
+</script>
+</body>
+</html>

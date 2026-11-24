@@ -1,0 +1,1 @@
+export default async ({ navigate, sleep, shot, evaluate }) => { await navigate("file:///tmp/ap-film/cards/poster.html"); await evaluate("Promise.all([...document.images].map(i=>i.decode().catch(()=>0)))"); await sleep(300); await shot("poster.png"); };

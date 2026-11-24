@@ -1,0 +1,11 @@
+blank_issues_enabled: false
+contact_links:
+  - name: Security vulnerability
+    url: https://github.com/fleox/agentphoto/security/advisories/new
+    about: Report it privately, not in a public issue.
+  - name: Documentation
+    url: https://github.com/fleox/agentphoto/tree/main/docs
+    about: Getting started, retouching recipes, document format, catalog, CLI, MCP, Studio, security.
+  - name: Commercial license
+    url: https://github.com/fleox/agentphoto/issues/new?title=Commercial%20license%20inquiry
+    about: Selling AgentPhoto or hosting it as a paid service needs a commercial license.

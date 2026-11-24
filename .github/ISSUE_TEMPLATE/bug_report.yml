@@ -1,0 +1,56 @@
+name: Bug report
+description: Something doesn't work as documented.
+labels: [bug]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for taking the time to report a problem. **Never paste API keys, and only attach photos you are allowed to share** (the CC0 sample photos — `library:portrait`, `library:product`… — are ideal for a reproduction). Security issues go through [SECURITY.md](https://github.com/fleox/agentphoto/blob/main/SECURITY.md).
+  - type: input
+    id: version
+    attributes:
+      label: AgentPhoto version
+      description: "The version you ran (`npx -y @fleox/agentphoto@<version> version`, or `agentphoto` in the project's `agentphoto.json`)."
+      placeholder: "0.1.0"
+    validations:
+      required: true
+  - type: dropdown
+    id: where
+    attributes:
+      label: Where does it happen?
+      options:
+        - agentphoto CLI
+        - Headless render or analysis (render, analyze)
+        - Export (png, jpeg, webp, avif, sizes, variants)
+        - Background removal or AI masks (remove-bg, mask generate, models)
+        - Studio (visual editor)
+        - Studio assistant
+        - MCP server
+        - An agent skill (Claude Code, Hermes, other)
+        - A template
+    validations:
+      required: true
+  - type: input
+    id: environment
+    attributes:
+      label: Environment
+      description: OS, Node.js version, browser and version (`agentphoto doctor --json` prints them).
+      placeholder: "macOS 15, Node 22.11, Chrome 131"
+  - type: textarea
+    id: steps
+    attributes:
+      label: What happened
+      description: Steps to reproduce, what you expected, what you got. Include the exact error, or the `--json` output of the command.
+    validations:
+      required: true
+  - type: textarea
+    id: document
+    attributes:
+      label: Document
+      description: The smallest `photo.json` that shows the problem (or `agentphoto doc summary --json`), or the template id it started from.
+      render: json
+  - type: textarea
+    id: extra
+    attributes:
+      label: Anything else
+      description: Renders (`renders/preview.png`), screenshots, console errors, the model used…

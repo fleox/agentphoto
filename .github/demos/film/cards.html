@@ -1,0 +1,133 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><title>AgentPhoto film cards</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{width:1920px;height:1080px;overflow:hidden}
+body{font-family:Inter,-apple-system,"SF Pro Display","Helvetica Neue",Arial,sans-serif;color:#fff;-webkit-font-smoothing:antialiased;position:relative}
+body.bg{background:radial-gradient(1200px 860px at 0% 0%,rgba(61,107,255,.30),transparent 70%),radial-gradient(1000px 640px at 100% 100%,rgba(122,165,255,.10),transparent 70%),#0a0b0f}
+body.clear{background:transparent}
+.dots{position:absolute;inset:0;background-image:radial-gradient(rgba(255,255,255,.05) 1px,transparent 1px);background-size:28px 28px;-webkit-mask-image:radial-gradient(900px 600px at 50% 40%,#000,transparent)}
+.g{background:linear-gradient(90deg,#9dbbff,#5b84ff 70%);-webkit-background-clip:text;background-clip:text;color:transparent}
+.brand{display:flex;align-items:center;justify-content:center;gap:22px}
+.brand img{width:86px;height:86px;filter:drop-shadow(0 10px 30px rgba(0,0,0,.5))}
+.brand b{font-size:50px;font-weight:750;letter-spacing:-.02em}
+.brand b span{color:#7aa5ff}
+h1{font-size:96px;line-height:1.04;font-weight:800;letter-spacing:-.035em;text-align:center}
+h2{font-size:64px;line-height:1.08;font-weight:800;letter-spacing:-.03em;text-align:center}
+.center{position:absolute;left:0;right:0;text-align:center}
+.cards{position:absolute;left:0;right:0;top:600px;display:flex;justify-content:center;gap:32px}
+.card{width:500px;padding:34px 36px 36px;border-radius:22px;background:linear-gradient(180deg,rgba(255,255,255,.06),rgba(255,255,255,.025));border:1px solid rgba(255,255,255,.12);box-shadow:0 30px 70px rgba(0,0,0,.45)}
+.card.off{visibility:hidden}
+.ic{width:62px;height:62px;border-radius:15px;background:rgba(91,132,255,.16);border:1px solid rgba(122,165,255,.35);display:flex;align-items:center;justify-content:center}
+.ic svg{width:32px;height:32px;stroke:#9dbbff;fill:none;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
+.card h3{margin-top:24px;font-size:36px;font-weight:700;letter-spacing:-.015em}
+.card p{margin-top:12px;font-size:26px;line-height:1.42;color:#a9b1c2}
+.sub{position:absolute;left:0;right:0;bottom:44px;display:flex;justify-content:center}
+.sub span{max-width:1560px;padding:12px 28px 14px;border-radius:16px;background:rgba(8,9,13,.74);font-size:42px;line-height:1.3;font-weight:600;letter-spacing:-.005em;text-align:center;color:#fff;text-shadow:0 1px 2px rgba(0,0,0,.4)}
+.chip{position:absolute;display:inline-flex;align-items:center;gap:10px;padding:7px 13px;border-radius:10px;background:rgba(10,11,15,.74);border:1px solid rgba(255,255,255,.16);font-size:18px;font-weight:600;color:#fff}
+.chip i{font-style:normal;color:#9dbbff;font-weight:650}
+.chip code{font-family:"SF Mono",Menlo,monospace;font-size:17px;font-weight:500;color:#e3e8f4}
+.chip.blue{background:#4f7bff;border-color:#6d92ff;padding:5px 12px;border-radius:8px}
+.chip.blue code{font-family:-apple-system,"Helvetica Neue",Arial,sans-serif;font-size:16px;font-weight:650;color:#fff}
+.speed{position:absolute;display:inline-flex;align-items:center;gap:6px;padding:0 12px;height:30px;border-radius:8px;background:#f9e2af;font:700 16px -apple-system,"Helvetica Neue",Arial,sans-serif;color:#1e1e2e}
+/* export */
+.panel{position:absolute;border-radius:22px;background:linear-gradient(180deg,rgba(255,255,255,.055),rgba(255,255,255,.02));border:1px solid rgba(255,255,255,.12);box-shadow:0 30px 70px rgba(0,0,0,.45);padding:30px 34px}
+.kicker{font-size:20px;font-weight:700;letter-spacing:.16em;color:#7aa5ff;text-transform:uppercase}
+pre{font-family:"SF Mono",Menlo,monospace;font-size:22px;line-height:1.45;color:#cdd6f4;margin-top:18px;white-space:pre}
+.t{color:#89b4fa}.a{color:#f9e2af}.s{color:#a6e3a1}.c{color:#6c7086}
+.row{display:flex;justify-content:space-between;align-items:baseline;padding:16px 0;border-top:1px solid rgba(255,255,255,.08);font-size:27px}
+.row:first-of-type{border-top:0}
+.row b{font-weight:700}.row span{color:#a9b1c2;font-size:23px}
+.tag{font-family:"SF Mono",Menlo,monospace;font-size:19px;color:#9dbbff;border:1px solid rgba(122,165,255,.45);background:rgba(91,132,255,.12);padding:2px 9px;border-radius:7px;margin-left:12px}
+.pills{position:absolute;left:0;right:0;display:flex;justify-content:center;gap:16px}
+.pill{padding:13px 24px;border-radius:999px;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.14);font-size:26px;font-weight:600;display:flex;align-items:center;gap:12px}
+.pill .dot{width:12px;height:12px;border-radius:50%;background:#34d399;box-shadow:0 0 12px #34d399}
+.hide{visibility:hidden}
+/* end */
+.cmd{display:inline-flex;align-items:center;gap:18px;padding:18px 30px;border-radius:16px;background:rgba(0,0,0,.35);border:1px solid rgba(255,255,255,.14);font-family:"SF Mono",Menlo,monospace;font-size:32px;color:#e3e8f4}
+.cmd .p{color:#9dbbff}
+.cmdlabel{font-size:22px;color:#8a93a6;font-weight:600;letter-spacing:.02em;margin-bottom:10px}
+.meta{font-size:28px;color:#a9b1c2}
+</style></head>
+<body>
+<script>
+const q = new URLSearchParams(location.search);
+const v = q.get("v");
+const esc = (s) => s.replace(/&/g,"&amp;").replace(/</g,"&lt;");
+const logo = `<img src="./logo.svg" alt="">`;
+const icons = {
+  spark: `<svg viewBox="0 0 24 24"><path d="M12 3l1.8 4.9L19 9.7l-5.2 1.8L12 16.4l-1.8-4.9L5 9.7l5.2-1.8z"/><path d="M19 15l.8 2.2 2.2.8-2.2.8L19 21l-.8-2.2-2.2-.8 2.2-.8z"/></svg>`,
+  bot: `<svg viewBox="0 0 24 24"><rect x="4" y="8" width="16" height="11" rx="3"/><path d="M12 4v4M9 13h.01M15 13h.01M9.5 16.5h5"/></svg>`,
+  layers: `<svg viewBox="0 0 24 24"><path d="M12 3l9 5-9 5-9-5z"/><path d="M3 13l9 5 9-5"/></svg>`,
+  lock: `<svg viewBox="0 0 24 24"><rect x="5" y="11" width="14" height="9" rx="2"/><path d="M8 11V8a4 4 0 0 1 8 0v3"/></svg>`,
+  globe: `<svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3c2.5 2.6 3.8 5.6 3.8 9s-1.3 6.4-3.8 9c-2.5-2.6-3.8-5.6-3.8-9S9.5 5.6 12 3z"/></svg>`,
+};
+let html = "";
+if (v === "bg") { document.body.className = "bg"; html = `<div class="dots"></div>`; }
+else if (v === "title") {
+  const n = Number(q.get("n") || 0);
+  document.body.className = "bg";
+  const cards = [
+    ["layers", "Non-destructive", "Layers, filters, masks, looks and effects. Change anything later."],
+    ["bot", "Agent-native", "It renders the picture headless, looks at it and fixes what it sees."],
+    ["lock", "Local and private", "Local AI cut-outs. No server, no account, no upload."],
+  ];
+  const top = n ? 120 : 250;
+  html = `<div class="dots"></div>
+  <div class="center" style="top:${top}px"><div class="brand">${logo}<b>Agent<span>Photo</span></b></div>
+  <h1 style="margin-top:44px">The photo studio<br><span class="g">your AI agent can run.</span></h1></div>
+  ${n ? `<div class="cards">${cards.map((c, i) => `<div class="card ${i < n ? "" : "off"}"><div class="ic">${icons[c[0]]}</div><h3>${c[1]}</h3><p>${c[2]}</p></div>`).join("")}</div>` : ""}`;
+}
+else if (v === "export") {
+  const n = Number(q.get("n") || 1);
+  document.body.className = "bg";
+  html = `<div class="dots"></div>
+  <div class="center" style="top:70px"><h2>Every size. <span class="g">One command.</span></h2></div>
+  <div class="panel" style="left:110px;top:220px;width:1000px;height:420px">
+    <div class="kicker">agentphoto export · real files and sizes</div>
+<pre><span class="c">$</span> <span class="t">agentphoto export</span> <span class="a">--variants</span> <span class="s">'[</span>
+<span class="s">    {"preset":"og","format":"jpeg"},</span>
+<span class="s">    {"preset":"square","format":"webp"},</span>
+<span class="s">    {"preset":"story","format":"webp"}]'</span>
+<span class="c">✓</span> dist/lake-og.jpg      <span class="a">1200×630</span>   <span class="s">JPEG</span>   <span class="c">252 KB</span>
+<span class="c">✓</span> dist/lake-square.webp <span class="a">1080×1080</span>  <span class="s">WebP</span>   <span class="c">286 KB</span>
+<span class="c">✓</span> dist/lake-story.webp  <span class="a">1080×1920</span>  <span class="s">WebP</span>   <span class="c">432 KB</span></pre>
+  </div>
+  <div class="panel" style="left:1150px;top:220px;width:660px;height:420px">
+    <div class="kicker">formats and sizes</div>
+    <div style="margin-top:12px">
+      <div class="row"><b>PNG · JPEG · WebP<span class="tag">--format</span></b></div>
+      <div class="row" style="padding-top:0;border:0"><span>quality, background, transparency</span></div>
+      <div class="row"><b>13 size presets<span class="tag">--preset</span></b></div>
+      <div class="row" style="padding-top:0;border:0"><span>Open Graph, posts, stories, YouTube, banners…</span></div>
+      <div class="row"><b>Transparent cut-outs</b></div>
+      <div class="row" style="padding-top:0;border:0"><span>PNG / WebP with alpha, the mask stays editable</span></div>
+    </div>
+  </div>
+  <div class="pills ${n >= 2 ? "" : "hide"}" style="top:690px"><div class="pill">check before export</div><div class="pill">cover or contain</div><div class="pill">plans before overwriting</div><div class="pill">non-destructive</div></div>
+  <div class="pills ${n >= 3 ? "" : "hide"}" style="top:782px"><div class="pill"><span class="dot"></span>No server</div><div class="pill"><span class="dot"></span>No account</div><div class="pill"><span class="dot"></span>No upload</div></div>`;
+}
+else if (v === "end") {
+  document.body.className = "bg";
+  html = `<div class="dots"></div>
+  <div class="center" style="top:225px"><div class="brand">${logo}<b>Agent<span>Photo</span></b></div>
+  <h2 style="margin-top:34px;font-size:70px">The photo studio <span class="g">your AI agent can run.</span></h2>
+  <div style="margin-top:64px;display:flex;justify-content:center;gap:40px">
+    <div><div class="cmdlabel">CLAUDE CODE PLUGIN</div><div class="cmd"><span class="p">/plugin</span> marketplace add fleox/agentphoto</div></div>
+    <div><div class="cmdlabel">OR ANY TERMINAL</div><div class="cmd"><span class="p">$</span> npx -y @fleox/agentphoto@0.1.0</div></div>
+  </div>
+  <div class="meta" style="margin-top:58px;display:flex;justify-content:center;align-items:center;gap:12px"><svg width="30" height="30" viewBox="0 0 16 16" fill="#a9b1c2"><path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z"/></svg>github.com/fleox/agentphoto</div>
+  <div class="meta" style="margin-top:16px;font-size:24px;color:#7d8596">Source available · Runs on your computer · No server, no account</div></div>`;
+}
+else if (v === "sub") { document.body.className = "clear"; html = `<div class="sub"><span>${esc(q.get("t"))}</span></div>`; }
+else if (v === "chip") { document.body.className = "clear"; html = `<div class="chip ${q.get("k") === "" && q.get("t").startsWith("Real") ? "blue" : ""}" style="left:${q.get("x")}px;top:${q.get("y")}px">${q.get("k") ? `<i>${esc(q.get("k"))}</i>` : ""}<code>${esc(q.get("t"))}</code></div>`; }
+else if (v === "speed") { document.body.className = "clear"; html = `<div class="speed" style="right:${q.get("r")}px;top:${q.get("y")}px"><span>⏩</span>${esc(q.get("t"))}</div>`; }
+else if (v === "mask") { document.body.style.background = "#000"; html = `<div style="position:absolute;left:0;top:0;width:${q.get("w")}px;height:${q.get("h")}px;border-radius:${q.get("r") || 18}px;background:#fff"></div>`; }
+else if (v === "frame") { // border + shadow around a clip rect
+  document.body.className = "bg";
+  const x = +q.get("x"), y = +q.get("y"), w = +q.get("w"), h = +q.get("h");
+  html = `<div class="dots"></div><div style="position:absolute;left:${x - 1}px;top:${y - 1}px;width:${w + 2}px;height:${h + 2}px;border-radius:19px;border:1px solid rgba(255,255,255,.16);box-shadow:0 40px 90px rgba(0,0,0,.6),0 0 0 1px rgba(0,0,0,.4)"></div>`;
+}
+document.body.innerHTML = html;
+</script>
+</body></html>
