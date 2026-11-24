@@ -17,7 +17,7 @@ Every push to `main` and every pull request also runs the **CI** workflow (`.git
 - The first version (0.1.0) is published by hand from a terminal: `npm publish` (`prepublishOnly` runs typecheck, tests, build and `check:skills`). npm only allows trusted publishing on an existing package.
 - Then on npmjs.com → package `@fleox/agentphoto` → **Settings → Trusted Publisher**: GitHub Actions, organization/user `fleox`, repository `agentphoto`, workflow file `release.yml`, no environment.
 
-The package ships `dist/agent`, `dist/engine`, `dist/studio`, `library`, `templates`, `plugin`, `changelog.json`, `README.md`, `LICENSE`.
+The package ships `dist/agent`, `dist/engine`, `dist/studio`, `dist/index.html`, `library`, `templates`, `plugin`, `changelog.json`, `README.md`, `LICENSE`.
 
 ## What users do
 
